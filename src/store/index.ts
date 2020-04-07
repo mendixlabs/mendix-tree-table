@@ -120,6 +120,7 @@ export class NodeStore {
 
     @action
     setRows(rowObjects: RowObject[], level?: number): void {
+        this.debug("store: setRows", rowObjects, level);
         const currentRows: RowObject[] = level === -1 ? [] : [...this.rows];
         rowObjects.forEach(obj => {
             const objIndex = currentRows.findIndex(row => row.key === obj.key);
@@ -178,6 +179,7 @@ export class NodeStore {
 
     @computed
     get rowTree(): Tree<RowObject[]> {
+        this.debug("store: rowTree")
         const arrayToTreeOpts = {
             parentProperty: "_parent",
             customID: "key"

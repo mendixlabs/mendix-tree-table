@@ -27,6 +27,7 @@ import { defaults } from "lodash";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
+import { observer } from "mobx-react";
 
 export interface Action extends IAction {};
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -34,6 +35,7 @@ export interface TransformNanoflows {
     [key: string]: Nanoflow;
 };
 
+@observer
 class MxTreeTable extends Component<MxTreeTableContainerProps> {
     private store: NodeStore;
     private widgetId?: string;
@@ -103,7 +105,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         // Create store
         const storeOpts: NodeStoreConstructorOptions = {
             validationMessages,
-            validColumns: !this.staticColumns,
+            validColumns: this.columnPropsValid,
             selectFirstOnSingle: this.props.selectSelectFirstOnSingle && this.props.selectMode === "single",
             columns,
             expanderFunction: this.expanderFunction,
@@ -112,6 +114,9 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         };
 
         this.store = new NodeStore(storeOpts);
+
+        // @ts-ignore
+        // window._STORE = this.store;
     }
 
     // **********************
@@ -254,6 +259,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
             this.store.setColumns(columns);
             this.store.setValidColumns(true);
+            console.log(1);
         } else {
             this.store.setValidColumns(false);
             this.store.addValidationMessage(new ValidationMessage("No dynamic columns loaded, not showing table"));
@@ -267,6 +273,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     // **********************
 
     private async _fetchData(mxObject?: mendix.lib.MxObject): Promise<void> {
+        this.debug("fetchData", mxObject ? mxObject.getGuid() : null, this.props.dataSource);
         try {
             let objects: mendix.lib.MxObject[] = [];
             if (this.props.dataSource === "xpath" && this.props.nodeEntity && mxObject) {
@@ -312,6 +319,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     }
 
     private async _loadChildData(guids: string[], parentKey: string): Promise<void> {
+        this.debug("loadChildData", guids, parentKey);
         try {
             const objects = await getObjects(guids);
             if (objects) {

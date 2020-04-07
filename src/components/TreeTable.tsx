@@ -45,26 +45,26 @@ export type PageLocation = "content" | "popup" | "modal";
 
 const DEBOUNCE = 250;
 
-// interface TreeTableState {
-//     lastLoadFromContext: number | null;
-// }
+interface TreeTableState {
+    lastLoadFromContext: number | null;
+}
 
 @observer
-export class TreeTable extends Component<TreeTableProps> {
+export class TreeTable extends Component<TreeTableProps, TreeTableState> {
     debounce: number | null;
 
     constructor(props: TreeTableProps) {
         super(props);
 
-        // const rows = this.createTree(props.rows);
+        const rows = props.store.rowTree;
 
-        // if (props.selectFirst && props.selectMode === "single" && rows.length > 0) {
-        //     props.store.setSelected([rows[0].key])
-        // }
+        if (props.selectFirst && props.selectMode === "single" && rows.length > 0) {
+            props.store.setSelected([rows[0].key])
+        }
 
-        // this.state = {
-        //     lastLoadFromContext: props.store.lastLoadFromContext
-        // };
+        this.state = {
+            lastLoadFromContext: props.store.lastLoadFromContext
+        };
 
         this.debounce = null;
         this.onRowClick = this.onRowClick.bind(this);
@@ -187,13 +187,12 @@ export class TreeTable extends Component<TreeTableProps> {
     }
 
     componentWillReceiveProps(newProps: TreeTableProps): void {
-        console.log(newProps);
-        // if (newProps.store.lastLoadFromContext !== this.state.lastLoadFromContext) {
-        //     this.setState({
-        //         lastLoadFromContext: newProps.store.lastLoadFromContext
-        //     });
-        //     this.collapseAll();
-        // }
+        if (newProps.store.lastLoadFromContext !== this.state.lastLoadFromContext) {
+            this.setState({
+                lastLoadFromContext: newProps.store.lastLoadFromContext
+            });
+            this.collapseAll();
+        }
     }
 
     private setSelected(keys: string[]): void {
