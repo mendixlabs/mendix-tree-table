@@ -1,9 +1,9 @@
 import { Component, ReactNode, createElement } from "react";
 
 import { MxTreeTableContainerProps } from "../typings/MxTreeTableProps";
-import MxTreeTable from "./MxTreeTable";
-import { validateProps } from "./util/validation";
-import { TreeTable, TreeTableProps } from "./components/TreeTable";
+// import MxTreeTable from "./MxTreeTable";
+// import { validateProps } from "./util/validation";
+// import { TreeTable, TreeTableProps } from "./components/TreeTable";
 
 declare function require(name: string): string;
 
@@ -13,48 +13,49 @@ type VisibilityMap = {
 
 export class preview extends Component<MxTreeTableContainerProps> {
     render(): ReactNode {
-        return (
-            <div ref={this.parentInline}>
-                <TreeTable {...this.transformProps(this.props)} />
-            </div>
-        );
+        return (<div />);
+        // return (
+        //     // <div ref={this.parentInline}>
+        //     //     <TreeTable {...this.transformProps(this.props)} />
+        //     // </div>
+        // );
     }
 
-    private parentInline(node?: HTMLElement | null): void {
-        // Temporary fix, the web modeler add a containing div, to render inline we need to change it.
-        if (node && node.parentElement && node.parentElement.parentElement) {
-            node.parentElement.parentElement.style.display = "block";
-        }
-    }
+    // private parentInline(node?: HTMLElement | null): void {
+    //     // Temporary fix, the web modeler add a containing div, to render inline we need to change it.
+    //     if (node && node.parentElement && node.parentElement.parentElement) {
+    //         node.parentElement.parentElement.style.display = "block";
+    //     }
+    // }
 
-    private transformProps(props: MxTreeTableContainerProps): TreeTableProps {
-        const validationAlert = validateProps(props);
-        let columns = MxTreeTable.getColumns(props.columnList);
+    // private transformProps(props: MxTreeTableContainerProps): TreeTableProps {
+    //     const validationAlert = validateProps(props);
+    //     let columns = MxTreeTable.getColumns(props.columnList);
 
-        if (props.columnMethod === "microflow") {
-            columns = [
-                {
-                    id: "dummy",
-                    width: null,
-                    originalAttr: "",
-                    label: "Columns dynamically loaded through microflow/nanoflow"
-                }
-            ];
-        }
+    //     if (props.columnMethod === "microflow") {
+    //         columns = [
+    //             {
+    //                 id: "dummy",
+    //                 width: null,
+    //                 originalAttr: "",
+    //                 label: "Columns dynamically loaded through microflow/nanoflow"
+    //             }
+    //         ];
+    //     }
 
-        return {
-            className: props.class,
-            style: props.style,
-            columns,
-            rows: [],
-            alertMessage: validationAlert,
-            showHeader: props.uiShowHeader,
-            selectMode: "none",
-            clickToSelect: true,
-            loading: false,
-            lastLoadFromContext: 0
-        };
-    }
+    //     return {
+    //         className: props.class,
+    //         style: props.style,
+    //         columns,
+    //         rows: [],
+    //         alertMessage: validationAlert,
+    //         showHeader: props.uiShowHeader,
+    //         selectMode: "none",
+    //         clickToSelect: true,
+    //         loading: false,
+    //         lastLoadFromContext: 0
+    //     };
+    // }
 }
 
 export function getPreviewCss(): string {
