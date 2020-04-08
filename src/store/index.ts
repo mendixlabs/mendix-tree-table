@@ -3,7 +3,7 @@ import { ValidationMessage } from "@jeltemx/mendix-react-widget-utils/lib/valida
 import { TreeColumnProps, getTreeTableColumns, TableRecord } from "../util/columns";
 import { ColumnProps } from "antd/es/table";
 // import arrayToTree, { Tree } from "array-to-tree";
-import { RowObject } from "../util/rows";
+import { TreeRowObject } from "../util/rows";
 import arrayToTree, { Tree } from "array-to-tree";
 import { getObject } from "@jeltemx/mendix-react-widget-utils";
 
@@ -16,7 +16,7 @@ export interface TreeGuids {
 }
 
 export interface MockStore {
-    rowTree: RowObject[];
+    rowTree: TreeRowObject[];
     setSelected: (keys?: string[]) => void;
     setExpanded: (keys?: string[]) => void;
     lastLoadFromContext: number | null;
@@ -36,8 +36,8 @@ export interface NodeStoreConstructorOptions {
     validationMessages: ValidationMessage[];
 
     childLoader: (guids: string[], parentKey: string) => Promise<void>;
-    expanderFunction(record: TableRecord | RowObject, level: number): Promise<void>;
-    rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: RowObject) => void;
+    expanderFunction(record: TableRecord | TreeRowObject, level: number): Promise<void>;
+    rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: TreeRowObject) => void;
     resetColumns: (col: string) => void;
     reset: () => void;
     debug: (...args: unknown[]) => void;
@@ -56,7 +56,7 @@ export class NodeStore {
     @observable public isLoading = false;
     @observable public validationMessages: ValidationMessage[] = [];
     @observable public columns: TreeColumnProps[] = [];
-    @observable public rows: RowObject[] = [];
+    @observable public rows: TreeRowObject[] = [];
     @observable public selectedRows: string[] = [];
     @observable public expandedRows: string[] = [];
     @observable public validColumns = true;
@@ -65,8 +65,8 @@ export class NodeStore {
     @observable public subscriptionHandles: number[] = [];
 
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
-    private expanderFunction: (record: TableRecord | RowObject, level: number) => Promise<void>;
-    private rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: RowObject) => void;
+    private expanderFunction: (record: TableRecord | TreeRowObject, level: number) => Promise<void>;
+    private rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: TreeRowObject) => void;
     private reset: () => void;
     private resetColumns: (col: string) => void;
 
@@ -147,9 +147,9 @@ export class NodeStore {
     }
 
     @action
-    setRows(rowObjects: RowObject[], level?: number): void {
+    setRows(rowObjects: TreeRowObject[], level?: number): void {
         this.debug("store: setRows", rowObjects, level);
-        const currentRows: RowObject[] = level === -1 ? [] : [...this.rows];
+        const currentRows: TreeRowObject[] = level === -1 ? [] : [...this.rows];
         rowObjects.forEach(obj => {
             const objIndex = currentRows.findIndex(row => row.key === obj.key);
             if (objIndex === -1) {
@@ -181,7 +181,7 @@ export class NodeStore {
     }
 
     @action
-    removeRow(row: RowObject): void {
+    removeRow(row: TreeRowObject): void {
         const rows = [...this.rows];
         const index = rows.findIndex(rowObj => rowObj.key === row.key);
 
@@ -302,7 +302,7 @@ export class NodeStore {
     }
 
     @computed
-    get rowTree(): Tree<RowObject[]> {
+    get rowTree(): Tree<TreeRowObject[]> {
         this.debug("store: rowTree");
         const arrayToTreeOpts = {
             parentProperty: "_parent",
@@ -327,7 +327,7 @@ export class NodeStore {
         };
     }
 
-    private _hasChildren(row: RowObject): boolean {
+    private _hasChildren(row: TreeRowObject): boolean {
         return this.rows.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
     }
 }

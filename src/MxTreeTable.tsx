@@ -31,7 +31,7 @@ import { ExtraMXValidateProps, validateProps } from "./util/validation";
 import { getColumns, TreeColumnProps, TableRecord } from "./util/columns";
 import { createCamelcaseId } from "./util";
 // import { TreeTable } from './components/TreeTable';
-import { RowObject, getFormattedValue } from "./util/rows";
+import { TreeRowObject, getFormattedValue } from "./util/rows";
 import defaults from "lodash/defaults";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
@@ -349,7 +349,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         }
     }
 
-    private async _convertMxObjectToRow(mxObject: mendix.lib.MxObject, parentKey?: string | null): Promise<RowObject> {
+    private async _convertMxObjectToRow(mxObject: mendix.lib.MxObject, parentKey?: string | null): Promise<TreeRowObject> {
         const attributes = mxObject.getAttributes();
         const referenceObjects =
             this.referenceAttr !== "" && -1 < attributes.indexOf(this.referenceAttr)
@@ -369,7 +369,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
         const keyPairValues = await this.getObjectKeyPairs(mxObject, appendIcon);
 
-        const retObj: RowObject = defaults(
+        const retObj: TreeRowObject = defaults(
             {
                 key: mxObject.getGuid()
             },
@@ -450,7 +450,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         return Promise.resolve(res);
     }
 
-    private async _expanderFunction(record: TableRecord | RowObject, level: number): Promise<void> {
+    private async _expanderFunction(record: TableRecord | TreeRowObject, level: number): Promise<void> {
         try {
             if (typeof record._mxReferences !== "undefined" && record._mxReferences.length > 0) {
                 this.store.setLoading(true);
@@ -763,7 +763,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     // OTHER METHODS
     // **********************
 
-    private _rowSubscriptionHandle(obj: mendix.lib.MxObject, row: RowObject): void {
+    private _rowSubscriptionHandle(obj: mendix.lib.MxObject, row: TreeRowObject): void {
         this.handleData([obj], row._parent);
         if (this.props.childMethod === "microflow" || this.props.childMethod === "nanoflow") {
             // If object already exists and has children, we will reload all children;

@@ -1,4 +1,4 @@
-export interface RowObject {
+export interface TreeRowObject {
     key: string;
     _parent?: string;
     _icon?: string;
