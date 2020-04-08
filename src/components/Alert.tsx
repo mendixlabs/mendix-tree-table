@@ -7,7 +7,7 @@ type TypeBootstrapStyle = "default" | "primary" | "success" | "info" | "inverse"
 
 export interface AlertProps {
     validationMessages: ValidationMessage[];
-    remove: (guid: string) => void;
+    remove?: (guid: string) => void;
 }
 
 @observer
@@ -38,7 +38,7 @@ export class Alerts extends Component<AlertProps, {}> {
     }
 
     private renderCloseButton(message: ValidationMessage): ReactNode {
-        if (message.fatal) {
+        if (message.fatal || typeof this.props.remove === "undefined") {
             return null;
         }
         const { remove } = this.props;

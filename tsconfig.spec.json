@@ -13,6 +13,7 @@
       ],
       "target": "es5",
       "allowJs": true,
-      "moduleResolution": "node"
+      "moduleResolution": "node",
+      "experimentalDecorators": true
   },
 }
