@@ -32,7 +32,7 @@ import { getColumns, TreeColumnProps, TableRecord } from "./util/columns";
 import { createCamelcaseId } from "./util";
 // import { TreeTable } from './components/TreeTable';
 import { RowObject, getFormattedValue } from "./util/rows";
-import { defaults } from "lodash";
+import defaults from "lodash/defaults";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
