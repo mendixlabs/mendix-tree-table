@@ -1,11 +1,12 @@
-import { observable, action, computed, flow } from "mobx";
+import { observable, action, computed, flow, toJS } from "mobx";
+import { TreeRowObject } from "../../util/rows";
 
 export interface RowObjectOptions {
     mxObject: mendix.lib.MxObject;
-    attrValueGetter: (obj: mendix.lib.MxObject, attr: string) => Promise<string | number | boolean>
+    createTreeRowObject: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
 
     isRoot?: boolean;
-    parent?: string;
+    parent?: string | null;
     changeHandler?: (guid?: string, removedCb?: (removed: boolean) => void) => void | Promise<void>;
 }
 
@@ -14,37 +15,38 @@ export class RowObject {
     public _subscriptions: number[] = [];
 
     public _changeHandler: (guid?: string, removedCb?: (removed: boolean) => void) => void;
-    public _attrValueGetter: (obj: mendix.lib.MxObject, attr: string) => Promise<string | number | boolean>;
+    public _createTreeRowObject: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
 
-    @observable _parent: string;
+    @observable _parent: string | null;
     @observable _isRoot: boolean;
     @observable _expanded: boolean;
     @observable _selected: boolean;
-    @observable _keyValPairs: { [key: string]: string | number | boolean };
+    @observable _keyValPairs: TreeRowObject;
 
     fixAttributes = flow(function*(this: RowObject) {
-        // TODO
+        const treeRowObject = (yield this._createTreeRowObject(this._obj, this._parent)) as TreeRowObject;
+        this._keyValPairs = treeRowObject;
     });
 
     constructor({
         mxObject,
-        attrValueGetter,
+        createTreeRowObject,
         isRoot = false,
-        parent = "",
+        parent = null,
         changeHandler = (): void => {}
     }: RowObjectOptions) {
-
         this._obj = mxObject;
         this._parent = parent;
         this._isRoot = isRoot;
         this._expanded = false;
         this._selected = false;
-        this._keyValPairs = {};
+        this._keyValPairs = { key: this._obj.getGuid() };
 
         this._changeHandler = changeHandler;
-        this._attrValueGetter = attrValueGetter;
+        this._createTreeRowObject = createTreeRowObject;
 
         this.resetSubscription();
+        this.fixAttributes();
     }
 
     @action
@@ -71,7 +73,7 @@ export class RowObject {
                                 window.logger.debug(`Removed row: ${guid}`);
                             }
                         } else {
-                            // this.setAttributes();
+                            this.fixAttributes();
                             // this.fixTitle();
                         }
                     });
@@ -79,6 +81,22 @@ export class RowObject {
             });
             this._subscriptions.push(subscription);
         }
+    }
+
+    @action
+    setRoot(state = false): void {
+        this._isRoot = state;
+    }
+
+    @action
+    setMendixObject(obj: mendix.lib.MxObject): void {
+        this._obj = obj;
+        this.fixAttributes();
+    }
+
+    @action
+    setParent(state: string | null = null): void {
+        this._parent = state;
     }
 
     @action
@@ -104,5 +122,15 @@ export class RowObject {
     @computed
     get expanded(): boolean {
         return this._expanded;
+    }
+
+    @computed
+    get treeObject(): TreeRowObject {
+        const keyVals = this._keyValPairs;
+        keyVals.key = this.key;
+        if (this._parent) {
+            keyVals._parent = this._parent;
+        }
+        return toJS(keyVals);
     }
 }

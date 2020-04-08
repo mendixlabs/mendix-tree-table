@@ -3,6 +3,7 @@ export interface TreeRowObject {
     _parent?: string;
     _icon?: string;
     _mxReferences?: string[];
+    children?: [];
     [other: string]: any;
 }
 

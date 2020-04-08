@@ -6,6 +6,7 @@ import { ColumnProps } from "antd/es/table";
 import { TreeRowObject } from "../util/rows";
 import arrayToTree, { Tree } from "array-to-tree";
 import { getObject } from "@jeltemx/mendix-react-widget-utils";
+import { RowObject } from "./objects/row";
 
 configure({ enforceActions: "observed" });
 
@@ -36,8 +37,7 @@ export interface NodeStoreConstructorOptions {
     validationMessages: ValidationMessage[];
 
     childLoader: (guids: string[], parentKey: string) => Promise<void>;
-    expanderFunction(record: TableRecord | TreeRowObject, level: number): Promise<void>;
-    rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: TreeRowObject) => void;
+    convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     resetColumns: (col: string) => void;
     reset: () => void;
     debug: (...args: unknown[]) => void;
@@ -51,46 +51,41 @@ export interface NodeStoreConstructorOptions {
 export class NodeStore {
     public debug: (...args: unknown[]) => void;
     public hasChildren = this._hasChildren.bind(this);
+    public rowChangeHandler = this._rowChangeHandler.bind(this);
 
     @observable public contextObject: mendix.lib.MxObject | null;
     @observable public isLoading = false;
     @observable public validationMessages: ValidationMessage[] = [];
     @observable public columns: TreeColumnProps[] = [];
     @observable public rows: TreeRowObject[] = [];
-    @observable public selectedRows: string[] = [];
-    @observable public expandedRows: string[] = [];
+    @observable public rowObjects: RowObject[] = [];
     @observable public validColumns = true;
     @observable public selectFirstOnSingle = false;
     @observable public lastLoadFromContext: number | null = null;
     @observable public subscriptionHandles: number[] = [];
 
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
-    private expanderFunction: (record: TableRecord | TreeRowObject, level: number) => Promise<void>;
-    private rowSubscriptionHandler: (obj: mendix.lib.MxObject, row: TreeRowObject) => void;
+    private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     private reset: () => void;
     private resetColumns: (col: string) => void;
 
-    constructor(opts: NodeStoreConstructorOptions) {
-        const {
-            contextObject,
-            columns,
-            validColumns,
-            selectFirstOnSingle,
-            childLoader,
-            expanderFunction,
-            rowSubscriptionHandler,
-            resetColumns,
-            reset,
-            debug
-        } = opts;
-
+    constructor({
+        contextObject,
+        columns,
+        validColumns,
+        selectFirstOnSingle,
+        childLoader,
+        convertMxObjectToRow,
+        resetColumns,
+        reset,
+        debug
+    }: NodeStoreConstructorOptions) {
         this.contextObject = contextObject || null;
         this.columns = columns;
         this.validColumns = validColumns;
         this.selectFirstOnSingle = selectFirstOnSingle;
         this.childLoader = childLoader;
-        this.expanderFunction = expanderFunction;
-        this.rowSubscriptionHandler = rowSubscriptionHandler;
+        this.convertMxObjectToRow = convertMxObjectToRow;
         this.resetColumns = resetColumns;
         this.reset = reset;
         this.debug = debug || ((): void => {});
@@ -147,54 +142,57 @@ export class NodeStore {
     }
 
     @action
-    setRows(rowObjects: TreeRowObject[], level?: number): void {
-        this.debug("store: setRows", rowObjects, level);
-        const currentRows: TreeRowObject[] = level === -1 ? [] : [...this.rows];
-        rowObjects.forEach(obj => {
-            const objIndex = currentRows.findIndex(row => row.key === obj.key);
+    setRowObjects(mxObjects: mendix.lib.MxObject[], level?: number, parent?: string | null): void {
+        this.debug("store: setRowObjects", mxObjects, level);
+        const currentRows: RowObject[] = level === -1 ? [] : [...this.rowObjects];
+        mxObjects.forEach(mxObject => {
+            const objIndex = currentRows.findIndex(row => row.key === mxObject.getGuid());
             if (objIndex === -1) {
-                currentRows.push(obj);
-                if (typeof level !== "undefined" && level > 0 && obj.key) {
-                    this.expanderFunction(obj, level - 1);
-                }
+                currentRows.push(
+                    new RowObject({
+                        mxObject,
+                        createTreeRowObject: this.convertMxObjectToRow,
+                        parent,
+                        changeHandler: this.rowChangeHandler()
+                    })
+                );
+                // TODO
+                // if (typeof level !== "undefined" && level > 0 && obj.key) {
+                //     // this.expanderFunction(obj, level - 1);
+                // }
             } else {
-                if (obj._mxReferences && obj._mxReferences.length > 0) {
+                const rowObj = currentRows[objIndex];
+                const references = rowObj._keyValPairs._mxReferences;
+                if (references && references.length > 0) {
                     // Are there reference that have not been loaded yet?
-                    const unFoundRows = obj._mxReferences.filter(
-                        o => currentRows.filter(c => c.key === o).length === 0
-                    );
+                    const unFoundRows = references.filter(o => currentRows.filter(c => c.key === o).length === 0);
                     // Does this node already have nodes loaded?
-                    const hasRows = currentRows.filter(row => row._parent && row._parent === obj.key).length > 0;
+                    const hasRows = currentRows.filter(row => row._parent && row._parent === rowObj.key).length > 0;
                     if (hasRows && unFoundRows.length > 0) {
                         // Node has children, but some references that have not been loaded yet. Load them all;
-                        this.childLoader(unFoundRows, obj.key);
+                        this.childLoader(unFoundRows, rowObj.key);
                     }
                 }
-                currentRows.splice(objIndex, 1, obj);
+                rowObj.resetSubscription();
+                rowObj.fixAttributes();
             }
         });
-        this.rows = currentRows;
-        this.resetSubscriptions();
-        if (level === -1) {
-            this.setLastLoadFromContext();
-        }
+        this.rowObjects = currentRows;
     }
 
     @action
-    removeRow(row: TreeRowObject): void {
-        const rows = [...this.rows];
-        const index = rows.findIndex(rowObj => rowObj.key === row.key);
+    removeRowObject(guid: string): void {
+        const rows = [...this.rowObjects];
+        const index = rows.findIndex(rowObj => rowObj.key === guid);
 
         if (index !== -1) {
+            const row = rows[index];
             rows.splice(index, 1);
-            const selected = [...this.selectedRows];
-            const findSelected = selected.findIndex(val => val === row.key);
-            if (findSelected !== -1) {
-                selected.splice(findSelected, 1);
+            row.clearSubscriptions();
+            if (row.selected) {
+                // TODO trigger selection change
             }
-
-            this.rows = rows;
-            this.selectedRows = selected;
+            this.rowObjects = rows;
         }
 
         this.resetSubscriptions();
@@ -203,13 +201,49 @@ export class NodeStore {
     @action
     setExpanded(keys?: string[]): void {
         this.debug("store: setExpanded", keys);
-        this.expandedRows = keys || [];
+        const current = this.expandedKeys;
+        const newKeys = keys || [];
+
+        const toRemove = current.filter(x => !newKeys.includes(x));
+        const toAdd = newKeys.filter(x => !current.includes(x));
+
+        toRemove.forEach(id => {
+            const obj = this.findRowObject(id);
+            if (obj) {
+                obj.setExpanded(false);
+            }
+        });
+
+        toAdd.forEach(id => {
+            const obj = this.findRowObject(id);
+            if (obj) {
+                obj.setExpanded(true);
+            }
+        });
     }
 
     @action
     setSelected(keys?: string[]): void {
         this.debug("store: setSelected", keys);
-        this.selectedRows = keys || [];
+        const current = this.selectedRows;
+        const newKeys = keys || [];
+
+        const toRemove = current.filter(x => !newKeys.includes(x));
+        const toAdd = newKeys.filter(x => !current.includes(x));
+
+        toRemove.forEach(id => {
+            const obj = this.findRowObject(id);
+            if (obj) {
+                obj.setSelected(false);
+            }
+        });
+
+        toAdd.forEach(id => {
+            const obj = this.findRowObject(id);
+            if (obj) {
+                obj.setSelected(true);
+            }
+        });
     }
 
     @action
@@ -240,30 +274,6 @@ export class NodeStore {
                     guid
                 })
             );
-        }
-
-        if (this.rows && this.rows.length > 0) {
-            this.rows.forEach(row => {
-                this.subscriptionHandles.push(
-                    subscribe({
-                        guid: row.key,
-                        callback: async () => {
-                            this.debug(`store: subcription fired row ${row.key}`);
-                            try {
-                                const rowObj = await getObject(row.key);
-                                // object is removed
-                                if (rowObj === null) {
-                                    this.removeRow(row);
-                                } else {
-                                    this.rowSubscriptionHandler(rowObj, row);
-                                }
-                            } catch (error) {
-                                window.mx.ui.error(`Error while handling row with guid ${row.key}`);
-                            }
-                        }
-                    })
-                );
-            });
         }
 
         if (this.tableGuids && this.tableGuids.columns && this.tableGuids.columns.length > 0) {
@@ -298,19 +308,23 @@ export class NodeStore {
 
     @computed
     get expandedKeys(): string[] {
-        return toJS(this.expandedRows);
+        return toJS(this.rowObjects.filter(r => r.expanded).map(r => r.key));
+    }
+
+    @computed
+    get selectedRows(): string[] {
+        return toJS(this.rowObjects.filter(r => r.selected).map(r => r.key));
     }
 
     @computed
     get rowTree(): Tree<TreeRowObject[]> {
-        this.debug("store: rowTree");
         const arrayToTreeOpts = {
             parentProperty: "_parent",
             customID: "key"
         };
-        const tree = arrayToTree(toJS(this.rows), arrayToTreeOpts);
+        const tree = arrayToTree(toJS(this.rowObjects.map(r => r.treeObject)), arrayToTreeOpts);
 
-        // When creating the tree, it cann be possible to get orphaned children (a node that has a parent id, but parent removed).
+        // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
         // We filter these top level elements from the tree, as they are no longer relevant
 
         return tree.filter(treeEl => typeof treeEl._parent === "undefined" && !treeEl._parent);
@@ -327,7 +341,35 @@ export class NodeStore {
         };
     }
 
+    public findRowObject(guid: string): RowObject | null {
+        if (!this.rowObjects) {
+            return null;
+        }
+        const found = this.rowObjects.find(e => e.key === guid);
+        return found || null;
+    }
+
     private _hasChildren(row: TreeRowObject): boolean {
         return this.rows.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
+    }
+
+    private _rowChangeHandler(): (guid: string, removedCB: (removed: boolean) => void) => Promise<void> {
+        return async (guid: string, removedCB: (removed: boolean) => void): Promise<void> => {
+            const object = await getObject(guid);
+            if (object) {
+                const found = this.rowObjects.find(entry => entry._obj.getGuid() === object.getGuid());
+                if (found) {
+                    found.setMendixObject(object);
+                    if (removedCB) {
+                        removedCB(false);
+                    }
+                }
+            } else {
+                this.removeRowObject(guid);
+                if (removedCB) {
+                    removedCB(true);
+                }
+            }
+        };
     }
 }

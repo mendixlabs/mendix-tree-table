@@ -9,14 +9,13 @@ import {
     openPage,
     fetchByXpath,
     getObjects,
-    // createObject,
-    // deleteObject,
     ValidationMessage,
     fetchAttr,
     getObject,
     commitObject,
     createObject,
-    OpenPageAs
+    OpenPageAs,
+    entityIsPersistable
 } from "@jeltemx/mendix-react-widget-utils";
 
 import { NodeStore, NodeStoreConstructorOptions } from "./store";
@@ -30,7 +29,6 @@ import {
 import { ExtraMXValidateProps, validateProps } from "./util/validation";
 import { getColumns, TreeColumnProps, TableRecord } from "./util/columns";
 import { createCamelcaseId } from "./util";
-// import { TreeTable } from './components/TreeTable';
 import { TreeRowObject, getFormattedValue } from "./util/rows";
 import defaults from "lodash/defaults";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
@@ -65,7 +63,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     private reset = this._reset.bind(this);
     private handleData = this._handleData.bind(this);
     private convertMxObjectToRow = this._convertMxObjectToRow.bind(this);
-    private rowSubscriptionHandler = this._rowSubscriptionHandle.bind(this);
     private resetColumns = this._resetColumnsDebounce.bind(this);
     private executeAction = this._executeAction.bind(this);
     private loadChildData = this._loadChildData.bind(this);
@@ -121,8 +118,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             validColumns: this.columnPropsValid,
             selectFirstOnSingle: this.props.selectSelectFirstOnSingle && this.props.selectMode === "single",
             columns,
-            expanderFunction: this.expanderFunction,
-            rowSubscriptionHandler: this.rowSubscriptionHandler,
+            convertMxObjectToRow: this.convertMxObjectToRow,
             childLoader: this.loadChildData,
             resetColumns: this.resetColumns,
             reset: this.reset,
@@ -132,7 +128,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         this.store = new NodeStore(storeOpts);
 
         // @ts-ignore
-        // window._STORE = this.store;
+        window._STORE = this.store;
     }
 
     // **********************
@@ -241,7 +237,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         if (columnMethod === "microflow" && columnHeaderMicroflow) {
             action.microflow = columnHeaderMicroflow;
         } else {
-            // TODO: Alert that something is wrong;
+            // TODO Alert that something is wrong;
             return;
         }
 
@@ -329,8 +325,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         this.debug("handleData", objects, parentKey, level);
 
         try {
-            const rowObjects = await Promise.all(objects.map(obj => this.convertMxObjectToRow(obj, parentKey)));
-            this.store.setRows(rowObjects, level);
+            this.store.setRowObjects(objects, level, parentKey);
             this.store.setLoading(false);
         } catch (error) {
             window.mx.ui.error("An error occurred while handling data: ", error);
@@ -349,7 +344,10 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         }
     }
 
-    private async _convertMxObjectToRow(mxObject: mendix.lib.MxObject, parentKey?: string | null): Promise<TreeRowObject> {
+    private async _convertMxObjectToRow(
+        mxObject: mendix.lib.MxObject,
+        parentKey?: string | null
+    ): Promise<TreeRowObject> {
         const attributes = mxObject.getAttributes();
         const referenceObjects =
             this.referenceAttr !== "" && -1 < attributes.indexOf(this.referenceAttr)
@@ -553,8 +551,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         const { helperEntity } = props;
 
         if (helperEntity !== "") {
-            const entity = window.mx.meta.getEntity(helperEntity);
-            extraProps.helperObjectPersistence = entity.isPersistable();
+            extraProps.helperObjectPersistence = entityIsPersistable(helperEntity);
         }
 
         return extraProps;
@@ -762,17 +759,6 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     // **********************
     // OTHER METHODS
     // **********************
-
-    private _rowSubscriptionHandle(obj: mendix.lib.MxObject, row: TreeRowObject): void {
-        this.handleData([obj], row._parent);
-        if (this.props.childMethod === "microflow" || this.props.childMethod === "nanoflow") {
-            // If object already exists and has children, we will reload all children;
-            const hasChildren = this.store.hasChildren(row);
-            if (hasChildren) {
-                this.expanderFunction(row, 0);
-            }
-        }
-    }
 
     private _resetColumnsDebounce(col: string): void {
         if (this.columnLoadTimeout !== null) {

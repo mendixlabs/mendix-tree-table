@@ -206,7 +206,6 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
     }
 
     private setSelected(keys: string[]): void {
-        // this.props.store.setSelected(keys);
         this.onSelectionChange(keys);
     }
 
