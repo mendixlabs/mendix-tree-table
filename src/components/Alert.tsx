@@ -13,7 +13,7 @@ export interface AlertProps {
 @observer
 export class Alerts extends Component<AlertProps, {}> {
     render(): ReactNode {
-        if (!this.props.validationMessages) {
+        if (!this.props.validationMessages || this.props.validationMessages.length === 0) {
             return null;
         }
 

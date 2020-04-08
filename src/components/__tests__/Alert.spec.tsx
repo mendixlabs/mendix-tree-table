@@ -4,35 +4,39 @@ import { shallow } from "enzyme";
 import { Alerts } from "../Alert";
 import { ValidationMessage } from '@jeltemx/mendix-react-widget-utils/lib/validation';
 
+const createValidationMessage = (text: string, id: string, fatal = true): ValidationMessage => {
+    return {
+        dismissable: false,
+        fatal,
+        id,
+        message: text
+    }
+}
+
 describe("Alert", () => {
     it("renders the structure when an alert message is specified", () => {
 
         const text = "this is a text";
-        const message = new ValidationMessage(text);
-        const id = message.id;
+        const message = createValidationMessage(text, "1");
         const alert = shallow(<Alerts validationMessages={[message]} />);
 
-        expect(alert.equals(<ul className="alerts"><li key={id}><div className="alert alert-danger">{message}</div></li></ul>)).toEqual(true);
+        expect(
+            alert.find('.alert-danger')
+        ).toHaveLength(1);
     });
 
     it("renders a list", () => {
         const texts = ["1", "2"];
-        const messages = texts.map(t => new ValidationMessage(t));
+        const messages = texts.map(t => createValidationMessage(t, "1", false));
         const alert = shallow(<Alerts validationMessages={messages} />);
 
         expect(
-            alert.equals(
-                <ul className="alerts">
-                    <li key={messages[0].id}><div className="alert alert-danger">1</div></li>
-                    <li key={messages[1].id}><div className="alert alert-danger">2</div></li>
-                </ul>
-            )
-        ).toEqual(true);
+            alert.find('.alert-warning')
+        ).toHaveLength(2);
     });
 
     it("renders no structure when the alert message is not specified", () => {
         const alert = shallow(<Alerts validationMessages={[]}  />);
-
-        expect(alert.isEmptyRender()).toEqual(true);
+        expect(alert.isEmptyRender()).toBe(true);
     });
 });

@@ -1,7 +1,7 @@
 {
   "extends": "./node_modules/@mendix/pluggable-widgets-tools/configs/tsconfig.base.json",
   "baseUrl": "./",
-  "include": ["./src/components/__tests__", "./typings"],
+  "include": ["./src/components/__tests__", "./typings", "./node_modules/@jeltemx/mendix-react-widget-utils"],
   "compilerOptions": {
       "types": ["jest", "mendix-client"],
       "noImplicitAny": false,
