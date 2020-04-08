@@ -19,7 +19,7 @@ baseConfig[0].module.rules[1].use.options.presets[0] = [
             "browsers": ["last 2 versions", "ie >= 11"],
         },
         "useBuiltIns": "usage",
-        "corejs": "2"
+        "corejs": "3"
     }
 ]
 baseConfig[1].module.rules[1].exclude = /node_modules\/(?!(@thi.ng)\/).*/
@@ -30,7 +30,7 @@ baseConfig[1].module.rules[1].use.options.presets[0] = [
             "browsers": ["last 2 versions", "ie >= 11"],
         },
         "useBuiltIns": "usage",
-        "corejs": "2"
+        "corejs": "3"
     }
 ]
 

@@ -17,4 +17,4 @@ export const getFormattedValue = (obj: mendix.lib.MxObject, attr: string): strin
         return window.mx.parser.formatValue(ret, type.toLowerCase());
     }
     return ret.valueOf ? ret.valueOf() : ret;
-}
+};

@@ -11,6 +11,7 @@ import { Alerts } from "./Alert";
 import { SelectionMode } from "../../typings/MxTreeTableProps";
 import { NodeStore } from "../store";
 import { TableRecord } from "../util/columns";
+import { MockStore } from "../store/index";
 
 export interface TreeColumnProps {
     id: string;
@@ -21,7 +22,7 @@ export interface TreeColumnProps {
 }
 
 export interface TreeTableProps {
-    store: NodeStore;
+    store: NodeStore | MockStore;
     className?: string;
     style?: object;
 
@@ -35,7 +36,6 @@ export interface TreeTableProps {
     clickToSelect: boolean;
     selectMode: SelectionMode;
     onSelect?: (ids: string[]) => void;
-    loading: boolean;
     buttonBar?: ReactNode;
     hideSelectBoxes?: boolean;
     selectFirst?: boolean;
@@ -59,7 +59,7 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
         const rows = props.store.rowTree;
 
         if (props.selectFirst && props.selectMode === "single" && rows.length > 0) {
-            props.store.setSelected([rows[0].key])
+            props.store.setSelected([rows[0].key]);
         }
 
         this.state = {
@@ -90,7 +90,15 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
             hideSelectBoxes
         } = this.props;
 
-        const { selectedRows, expandedRows, treeTableColumns, validationMessages, removeValidationMessage, rowTree, isLoading } = store;
+        const {
+            selectedRows,
+            expandedKeys,
+            treeTableColumns,
+            validationMessages,
+            removeValidationMessage,
+            rowTree,
+            isLoading
+        } = store;
 
         const clearDebounce = (): void => {
             if (this.debounce !== null) {
@@ -107,17 +115,18 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
                         this.onRowClick(record);
                         if (selectMode !== "none" && clickToSelect) {
                             const findKey = selectedRows.indexOf(record.key);
+                            const selected = [...selectedRows];
                             const isSelected = findKey !== -1;
                             if (isSelected && selectMode === "single") {
                                 this.setSelected([]);
                             } else if (isSelected && selectMode === "multi") {
-                                selectedRows.splice(findKey, 1);
-                                this.setSelected(selectedRows);
+                                selected.splice(findKey, 1);
+                                this.setSelected(selected);
                             } else if (!isSelected && selectMode === "single") {
                                 this.setSelected([record.key]);
                             } else if (!isSelected && selectMode === "multi") {
-                                selectedRows.push(record.key);
-                                this.setSelected(selectedRows);
+                                selected.push(record.key);
+                                this.setSelected(selected);
                             }
                         }
                     }, DEBOUNCE);
@@ -178,7 +187,7 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
                     showHeader={showHeader}
                     rowSelection={rowSelection}
                     loading={isLoading}
-                    expandedRowKeys={expandedRows}
+                    expandedRowKeys={expandedKeys}
                     rowClassName={this.rowClassName}
                     expandRowByClick={onClickOpenRow && selectMode !== "multi"}
                 />
@@ -191,12 +200,13 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
             this.setState({
                 lastLoadFromContext: newProps.store.lastLoadFromContext
             });
-            this.collapseAll();
+            // TODO see if this is still necessary?
+            // this.collapseAll();
         }
     }
 
     private setSelected(keys: string[]): void {
-        this.props.store.setSelected(keys);
+        // this.props.store.setSelected(keys);
         this.onSelectionChange(keys);
     }
 
@@ -238,8 +248,8 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
     }
 
     private onExpand(expanded: boolean, record: TableRecord): void {
-        const { expandedRows } = this.props.store;
-        const cloned = [...expandedRows];
+        const { expandedKeys } = this.props.store;
+        const cloned = [...expandedKeys];
         if (expanded) {
             cloned.push(record.key);
         } else {

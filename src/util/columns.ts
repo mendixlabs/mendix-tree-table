@@ -36,9 +36,9 @@ export const getColumns = (columns: TreeviewColumnProps[], isStatic = true): Tre
         return tableColumn;
     });
     return newColumns;
-}
+};
 
-export const getTreeTableColumns =  (columns: TreeColumnProps[]): Array<ColumnProps<TableRecord>> => {
+export const getTreeTableColumns = (columns: TreeColumnProps[]): Array<ColumnProps<TableRecord>> => {
     return columns.map(col => {
         const treeColumn: ColumnProps<TableRecord> = {
             key: col.id,
@@ -54,4 +54,4 @@ export const getTreeTableColumns =  (columns: TreeColumnProps[]): Array<ColumnPr
         }
         return treeColumn;
     });
-}
+};
