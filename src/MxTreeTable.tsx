@@ -1,6 +1,8 @@
 import { Component, ReactNode, createElement } from "react";
 import { hot } from "react-hot-loader/root";
 import { findDOMNode } from "react-dom";
+import defaults from "lodash/defaults";
+import { observer } from "mobx-react";
 import {
     IAction,
     getObjectContextFromObjects,
@@ -9,6 +11,7 @@ import {
     openPage,
     fetchByXpath,
     getObjects,
+    getFormattedValue,
     ValidationMessage,
     fetchAttr,
     getObject,
@@ -29,12 +32,10 @@ import {
 import { ExtraMXValidateProps, validateProps } from "./util/validation";
 import { getColumns, TreeColumnProps, TableRecord } from "./util/columns";
 import { createCamelcaseId } from "./util";
-import { TreeRowObject, getFormattedValue } from "./util/rows";
-import defaults from "lodash/defaults";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
-import { observer } from "mobx-react";
+import { TreeRowObject } from "./store/objects/row";
 
 export interface Action extends IAction {}
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -249,8 +250,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
             headerObjects.forEach(obj => {
                 const headerAttribute = obj.get(columnHeaderAttrAttribute);
-                // TODO fix the MxMetaObject, should have this method
-                // @ts-ignore
                 if (typeof headerAttribute === "string" && headerAttribute && nodeMetaEntity.has(headerAttribute)) {
                     const headerProps: TreeColumnProps = {
                         id: createCamelcaseId(headerAttribute),

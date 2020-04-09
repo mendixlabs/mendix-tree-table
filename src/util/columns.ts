@@ -1,6 +1,6 @@
 import { createCamelcaseId } from ".";
-import { TreeviewColumnProps } from "../../typings/MxTreeTableProps";
 import { ColumnProps } from "antd/es/table";
+import { TreeviewColumnProps } from "../../typings/MxTreeTableProps";
 
 export interface TreeColumnProps {
     id: string;

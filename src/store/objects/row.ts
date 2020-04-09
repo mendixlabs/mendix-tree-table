@@ -1,5 +1,4 @@
 import { observable, action, computed, flow, toJS } from "mobx";
-import { TreeRowObject } from "../../util/rows";
 
 export interface RowObjectOptions {
     mxObject: mendix.lib.MxObject;
@@ -8,6 +7,15 @@ export interface RowObjectOptions {
     isRoot?: boolean;
     parent?: string | null;
     changeHandler?: (guid?: string, removedCb?: (removed: boolean) => void) => void | Promise<void>;
+}
+
+export interface TreeRowObject {
+    key: string;
+    _parent?: string;
+    _icon?: string;
+    _mxReferences?: string[];
+    children?: [];
+    [other: string]: any;
 }
 
 export class RowObject {

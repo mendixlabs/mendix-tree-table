@@ -53,7 +53,7 @@
     "webpack-bundle-analyzer": "^3.6.0"
   },
   "dependencies": {
-    "@jeltemx/mendix-react-widget-utils": "^0.3.7",
+    "@jeltemx/mendix-react-widget-utils": "^0.6.1",
     "@thi.ng/strings": "^1.2.3",
     "antd": "^3.26.7",
     "array-to-tree": "^3.3.2",

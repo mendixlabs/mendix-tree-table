@@ -1,7 +1,6 @@
 import { Component, ReactNode, createElement } from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-
 import Table, { TableRowSelection } from "antd/es/table";
 
 // Importing seperate so we don't pollute the CSS too much

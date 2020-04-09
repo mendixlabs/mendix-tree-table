@@ -1,12 +1,9 @@
 import { observable, action, configure, computed, toJS } from "mobx";
-import { ValidationMessage } from "@jeltemx/mendix-react-widget-utils/lib/validation";
-import { TreeColumnProps, getTreeTableColumns, TableRecord } from "../util/columns";
 import { ColumnProps } from "antd/es/table";
-// import arrayToTree, { Tree } from "array-to-tree";
-import { TreeRowObject } from "../util/rows";
 import arrayToTree, { Tree } from "array-to-tree";
-import { getObject } from "@jeltemx/mendix-react-widget-utils";
-import { RowObject } from "./objects/row";
+import { ValidationMessage, getObject } from "@jeltemx/mendix-react-widget-utils";
+import { TreeColumnProps, getTreeTableColumns, TableRecord } from "../util/columns";
+import { RowObject, TreeRowObject } from "./objects/row";
 
 configure({ enforceActions: "observed" });
 
