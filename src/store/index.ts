@@ -170,8 +170,6 @@ export class NodeStore {
             });
         }
 
-        console.log(rootObjectGuids);
-
         mxObjects.forEach(mxObject => {
             const objIndex = currentRows.findIndex(row => row.key === mxObject.getGuid());
             if (objIndex === -1) {
@@ -280,8 +278,8 @@ export class NodeStore {
     }
 
     @action
-    clearSubscriptions(): void {
-        this.debug("store: clearSubscriptions");
+    clearSubscriptions(from = ""): void {
+        this.debug("store: clearSubscriptions // from: ", from);
         if (this.subscriptionHandles && this.subscriptionHandles.length > 0) {
             this.subscriptionHandles.forEach(window.mx.data.unsubscribe);
             this.subscriptionHandles = [];
@@ -289,9 +287,9 @@ export class NodeStore {
     }
 
     @action
-    resetSubscriptions(): void {
-        this.clearSubscriptions();
-        this.debug("store: resetSubscriptions");
+    resetSubscriptions(from = ""): void {
+        this.clearSubscriptions(from);
+        this.debug("store: resetSubscriptions // from: ", from);
 
         const { subscribe } = window.mx.data;
 
@@ -301,7 +299,7 @@ export class NodeStore {
                 subscribe({
                     callback: () => {
                         this.debug(`store: subcription fired context ${guid}`);
-                        this.clearSubscriptions();
+                        this.clearSubscriptions("store context subscription");
                         this.reset();
                     },
                     guid
@@ -361,7 +359,10 @@ export class NodeStore {
             customID: "key"
         };
 
-        const tree = arrayToTree(this.rowObjects.map(r => r.treeObject), arrayToTreeOpts);
+        const tree = arrayToTree(
+            this.rowObjects.map(r => r.treeObject),
+            arrayToTreeOpts
+        );
 
         // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
         // We filter these top level elements from the tree, as they are no longer relevant

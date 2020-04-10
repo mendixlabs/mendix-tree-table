@@ -154,7 +154,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         }
 
         this.store.setContext(nextProps.mxObject);
-        this.store.resetSubscriptions();
+        this.store.resetSubscriptions("MxTreeTable componentReceiveProps");
 
         if (nextProps.mxObject) {
             this.store.setLoading(true);
@@ -224,6 +224,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         if (!mxObject) {
             return;
         }
+        this.debug("getColumnsFromDatasource");
 
         const {
             nodeEntity,
@@ -369,8 +370,8 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         const keyPairValues = await this.getObjectKeyPairs(mxObject, appendIcon);
 
         const retObj: TreeRowObject = {
-                key: mxObject.getGuid(),
-                ...keyPairValues
+            key: mxObject.getGuid(),
+            ...keyPairValues
         };
 
         if (this.props.uiRowClassAttr) {
@@ -411,8 +412,15 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
                 if (col.originalAttr && -1 < attributes.indexOf(col.originalAttr)) {
                     const key = col.id;
                     let formatted;
-                    if (this.transformNanoflows[col.originalAttr] && typeof this.transformNanoflows[col.originalAttr].nanoflow !== "undefined") {
-                        formatted = await this.executeAction({nanoflow: this.transformNanoflows[col.originalAttr]}, true, obj) as string;
+                    if (
+                        this.transformNanoflows[col.originalAttr] &&
+                        typeof this.transformNanoflows[col.originalAttr].nanoflow !== "undefined"
+                    ) {
+                        formatted = (await this.executeAction(
+                            { nanoflow: this.transformNanoflows[col.originalAttr] },
+                            true,
+                            obj
+                        )) as string;
                     } else {
                         formatted = getFormattedValue(obj, col.originalAttr);
                     }
@@ -734,7 +742,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             }
             this.store.clearSubscriptions();
             await this.selectionAction(selectedObjects, selectOnChangeMicroflow, null);
-            this.store.resetSubscriptions();
+            this.store.resetSubscriptions("onSelectAction mf");
         } else if (selectOnChangeAction === "nf" && selectOnChangeNanoflow) {
             const selectedObjects = await getObjects(selectedRows);
             if (selectedObjects === null) {
@@ -742,7 +750,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             }
             this.store.clearSubscriptions();
             await this.selectionAction(selectedObjects, null, selectOnChangeNanoflow);
-            this.store.resetSubscriptions();
+            this.store.resetSubscriptions("onSelectAction nf");
         }
     }
 
@@ -753,18 +761,27 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     private _resetColumnsDebounce(col: string): void {
         if (this.columnLoadTimeout !== null) {
             window.clearTimeout(this.columnLoadTimeout);
-            // this.columnLoadTimeout = null;
         }
         this.store.clearSubscriptions();
         this.columnLoadTimeout = window.setTimeout(() => {
             this.debug("Reset columns ", col);
-            this.getColumnsFromDatasource(this.props.mxObject).then(() => this.fetchData(this.props.mxObject));
+            this.getColumnsFromDatasource(this.props.mxObject).then(() => {
+                this.store.resetSubscriptions("MxTreeTable resetColumnsDebounce");
+                this.fetchData(this.props.mxObject);
+            });
             this.columnLoadTimeout = null;
         }, 100);
     }
 
     private _reset(): void {
-        this.fetchData(this.props.mxObject);
+        if (!this.staticColumns && this.columnPropsValid) {
+            this.getColumnsFromDatasource(this.props.mxObject).then(() => {
+                this.store.resetSubscriptions("MxTreeTable reset");
+                this.fetchData(this.props.mxObject);
+            });
+        } else {
+            this.fetchData(this.props.mxObject);
+        }
     }
 
     private setTransFormColumns(columns: TreeviewColumnProps[]): void {
