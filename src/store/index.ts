@@ -32,6 +32,9 @@ export interface NodeStoreConstructorOptions {
     validColumns: boolean;
     selectFirstOnSingle: boolean;
     validationMessages: ValidationMessage[];
+    nodeChildReference: string;
+    childIsRootAttr: string;
+    calculateInitialParents: boolean;
 
     childLoader: (guids: string[], parentKey: string) => Promise<void>;
     convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
@@ -39,11 +42,6 @@ export interface NodeStoreConstructorOptions {
     reset: () => void;
     debug: (...args: unknown[]) => void;
 }
-
-// const arrayToTreeOpts = {
-//     parentProperty: "parent",
-//     customID: "guid"
-// };
 
 export class NodeStore {
     public debug: (...args: unknown[]) => void;
@@ -60,7 +58,10 @@ export class NodeStore {
     @observable public selectFirstOnSingle = false;
     @observable public lastLoadFromContext: number | null = null;
     @observable public subscriptionHandles: number[] = [];
+    @observable public calculateInitialParents = false;
 
+    private nodeChildreference: string;
+    private childIsRootAttr: string;
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
     private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     private reset: () => void;
@@ -71,8 +72,12 @@ export class NodeStore {
         columns,
         validColumns,
         selectFirstOnSingle,
+        calculateInitialParents,
+        nodeChildReference,
+        childIsRootAttr,
         childLoader,
         convertMxObjectToRow,
+        validationMessages,
         resetColumns,
         reset,
         debug
@@ -81,6 +86,10 @@ export class NodeStore {
         this.columns = columns;
         this.validColumns = validColumns;
         this.selectFirstOnSingle = selectFirstOnSingle;
+        this.calculateInitialParents = calculateInitialParents;
+        this.validationMessages = validationMessages;
+        this.nodeChildreference = nodeChildReference;
+        this.childIsRootAttr = childIsRootAttr;
         this.childLoader = childLoader;
         this.convertMxObjectToRow = convertMxObjectToRow;
         this.resetColumns = resetColumns;
@@ -142,15 +151,39 @@ export class NodeStore {
     setRowObjects(mxObjects: mendix.lib.MxObject[], level?: number, parent?: string | null): void {
         this.debug("store: setRowObjects", mxObjects, level);
         const currentRows: RowObject[] = level === -1 ? [] : [...this.rowObjects];
+
+        const treeMapping: { [key: string]: string } = {};
+        const rootObjectGuids: string[] = [];
+
+        if (this.calculateInitialParents && this.nodeChildreference && this.childIsRootAttr) {
+            mxObjects.forEach(obj => {
+                if (obj && obj.has(this.nodeChildreference)) {
+                    obj.getReferences(this.nodeChildreference).forEach(ref => {
+                        treeMapping[ref] = obj.getGuid();
+                    });
+                }
+                if (obj && obj.has(this.childIsRootAttr)) {
+                    if (obj.get(this.childIsRootAttr) as boolean) {
+                        rootObjectGuids.push(obj.getGuid());
+                    }
+                }
+            });
+        }
+
+        console.log(rootObjectGuids);
+
         mxObjects.forEach(mxObject => {
             const objIndex = currentRows.findIndex(row => row.key === mxObject.getGuid());
             if (objIndex === -1) {
+                const treeParent = treeMapping[mxObject.getGuid()];
+                const parentObj = this.calculateInitialParents && treeParent ? treeParent : parent;
                 currentRows.push(
                     new RowObject({
                         mxObject,
                         createTreeRowObject: this.convertMxObjectToRow,
-                        parent,
-                        changeHandler: this.rowChangeHandler()
+                        parent: parentObj,
+                        changeHandler: this.rowChangeHandler(),
+                        isRoot: rootObjectGuids.indexOf(mxObject.getGuid()) !== -1
                     })
                 );
                 // TODO
@@ -175,6 +208,9 @@ export class NodeStore {
             }
         });
         this.rowObjects = currentRows;
+        if (this.calculateInitialParents) {
+            this.disableCalculateInitial();
+        }
     }
 
     @action
@@ -288,6 +324,11 @@ export class NodeStore {
         }
     }
 
+    @action
+    disableCalculateInitial(): void {
+        this.calculateInitialParents = false;
+    }
+
     // **********************
     // COMPUTED
     // **********************
@@ -319,7 +360,8 @@ export class NodeStore {
             parentProperty: "_parent",
             customID: "key"
         };
-        const tree = arrayToTree(toJS(this.rowObjects.map(r => r.treeObject)), arrayToTreeOpts);
+
+        const tree = arrayToTree(this.rowObjects.map(r => r.treeObject), arrayToTreeOpts);
 
         // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
         // We filter these top level elements from the tree, as they are no longer relevant

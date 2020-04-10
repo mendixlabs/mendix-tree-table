@@ -13,7 +13,6 @@ import {
     getObjects,
     getFormattedValue,
     ValidationMessage,
-    fetchAttr,
     getObject,
     commitObject,
     createObject,
@@ -69,7 +68,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     private loadChildData = this._loadChildData.bind(this);
     private getObjectKeyPairs = this._getObjectKeyPairs.bind(this);
     private expanderFunction = this._expanderFunction.bind(this);
-    private getFormattedOrTransformed = this._getFormattedOrTransformed.bind(this);
+    // private getFormattedOrTransformed = this._getFormattedOrTransformed.bind(this);
     private getColumnsFromDatasource = this._getColumnsFromDatasource.bind(this);
     private getButtons = this._getButtons.bind(this);
 
@@ -115,6 +114,9 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
         // Create store
         const storeOpts: NodeStoreConstructorOptions = {
+            calculateInitialParents: this.props.loadScenario === "all",
+            nodeChildReference: this.referenceAttr,
+            childIsRootAttr: this.props.nodeIsRootAttr,
             validationMessages,
             validColumns: this.columnPropsValid,
             selectFirstOnSingle: this.props.selectSelectFirstOnSingle && this.props.selectMode === "single",
@@ -175,7 +177,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             selectHideCheckboxes,
             selectOnChangeAction
         } = this.props;
-        const { validColumns, validationMessages, removeValidationMessage, selectFirstOnSingle } = this.store;
+        const { validationMessages, removeValidationMessage, selectFirstOnSingle } = this.store;
         const fatalValidations = validationMessages.filter(m => m.fatal);
 
         const buttonBar = this.getButtons(selectActionButtons);
@@ -190,7 +192,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             selectionMode = "none";
         }
 
-        if (!validColumns && fatalValidations) {
+        if (fatalValidations.length > 0) {
             return (
                 <div className={"widget-treetable-alert"}>
                     <Alerts validationMessages={fatalValidations} remove={removeValidationMessage} />
@@ -355,26 +357,24 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
         let childAttrValue: string | number | boolean | undefined;
         if (this.hasChildAttr) {
-            childAttrValue = await fetchAttr(mxObject, this.hasChildAttr);
+            childAttrValue = mxObject.get(this.hasChildAttr);
         }
 
         let appendIcon: string | null = null;
 
         if (this.props.uiRowIconAttr) {
-            appendIcon = (await fetchAttr(mxObject, this.props.uiRowIconAttr)) as string | null;
+            appendIcon = mxObject.get(this.props.uiRowIconAttr) as string | null;
         }
 
         const keyPairValues = await this.getObjectKeyPairs(mxObject, appendIcon);
 
-        const retObj: TreeRowObject = defaults(
-            {
-                key: mxObject.getGuid()
-            },
-            keyPairValues
-        );
+        const retObj: TreeRowObject = {
+                key: mxObject.getGuid(),
+                ...keyPairValues
+        };
 
         if (this.props.uiRowClassAttr) {
-            const className = (await fetchAttr(mxObject, this.props.uiRowClassAttr)) as string | null;
+            const className = mxObject.get(this.props.uiRowClassAttr) as string | null;
             if (className) {
                 retObj._className = className;
             }
@@ -410,7 +410,12 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             columns.map(async (col: TreeColumnProps, index: number) => {
                 if (col.originalAttr && -1 < attributes.indexOf(col.originalAttr)) {
                     const key = col.id;
-                    const formatted = await this.getFormattedOrTransformed(obj, col.originalAttr);
+                    let formatted;
+                    if (this.transformNanoflows[col.originalAttr] && typeof this.transformNanoflows[col.originalAttr].nanoflow !== "undefined") {
+                        formatted = await this.executeAction({nanoflow: this.transformNanoflows[col.originalAttr]}, true, obj) as string;
+                    } else {
+                        formatted = getFormattedValue(obj, col.originalAttr);
+                    }
                     const retVal: { [key: string]: string | number | boolean | ReactNode } = {};
                     if (appendIcon && index === 0) {
                         const prefix = this.props.uiIconPrefix || "glyphicon glyphicon-";
@@ -431,20 +436,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         ).then(objects => {
             return defaults({}, ...objects);
         });
-    }
-
-    private _getFormattedOrTransformed(obj: mendix.lib.MxObject, attr: string): Promise<string | number | boolean> {
-        if (this.transformNanoflows[attr] && typeof this.transformNanoflows[attr].nanoflow !== "undefined") {
-            return this.executeAction(
-                {
-                    nanoflow: this.transformNanoflows[attr]
-                },
-                true,
-                obj
-            ) as Promise<string>;
-        }
-        const res = getFormattedValue(obj, attr);
-        return Promise.resolve(res);
     }
 
     private async _expanderFunction(record: TableRecord | TreeRowObject, level: number): Promise<void> {

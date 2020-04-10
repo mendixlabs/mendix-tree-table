@@ -20,6 +20,7 @@ export type OnChangeAction = "nothing" | "mf" | "nf";
 export type ChildDataSource = "disabled" | "reference" | "microflow" | "nanoflow";
 export type SelectionMode = "none" | "single" | "multi";
 export type ColumnMethod = "static" | "microflow";
+export type LoadScenario = "partial" | "all";
 
 export interface TreeviewColumnProps {
     columnHeader: string;
@@ -40,10 +41,12 @@ export interface ActionButtonProps {
 
 export interface MxTreeTableContainerProps extends CommonProps {
     nodeEntity: string;
+    loadScenario: LoadScenario;
     dataSource: DataSource;
     constraint: string;
     getDataMf: string;
     getDataNf: Nanoflow;
+    nodeIsRootAttr: string;
 
     childMethod: ChildDataSource;
     childReference: string;

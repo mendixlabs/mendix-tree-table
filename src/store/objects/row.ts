@@ -26,7 +26,6 @@ export class RowObject {
     public _createTreeRowObject: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
 
     @observable _parent: string | null;
-    @observable _isRoot: boolean;
     @observable _expanded: boolean;
     @observable _selected: boolean;
     @observable _keyValPairs: TreeRowObject;
@@ -35,6 +34,8 @@ export class RowObject {
         const treeRowObject = (yield this._createTreeRowObject(this._obj, this._parent)) as TreeRowObject;
         this._keyValPairs = treeRowObject;
     });
+
+    private _isRoot: boolean;
 
     constructor({
         mxObject,
@@ -54,7 +55,15 @@ export class RowObject {
         this._createTreeRowObject = createTreeRowObject;
 
         this.resetSubscription();
-        this.fixAttributes();
+
+        if (this._isRoot) {
+            this.fixAttributes();
+        } else {
+            // Small dirty hack when rendering a whole tree
+            setTimeout(() => {
+                this.fixAttributes();
+            }, 0);
+        }
     }
 
     @action
@@ -82,7 +91,6 @@ export class RowObject {
                             }
                         } else {
                             this.fixAttributes();
-                            // this.fixTitle();
                         }
                     });
                 }

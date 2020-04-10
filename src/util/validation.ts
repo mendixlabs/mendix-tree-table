@@ -64,6 +64,18 @@ export const validateProps = (
         "For data source option 'nanoflow', a data source nanoflow is required"
     );
 
+    conditionalValidation(
+        props.loadScenario === "all" && props.nodeIsRootAttr === "",
+        "Data",
+        "When load scenario is set to 'Whole Tree', the widget needs to know which elements are root. Please set the Root attribute"
+    );
+
+    conditionalValidation(
+        props.loadScenario === "all" && !props.childReference,
+        "Data",
+        "When load scenario is set to 'Whole Tree', you will need to set the childReference, otherwise it won't work"
+    );
+
     conditionalValidation(props.onClickAction === "mf" && !props.onClickMf, "Events", "On click microflow missing");
 
     conditionalValidation(

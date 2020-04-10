@@ -11,35 +11,58 @@
                 DATA
         *********************-->
         <propertyGroup caption="Data">
-            <property key="nodeEntity" type="entity" required="true" allowNonPersistableEntities="true">
-                <caption>Node Entity</caption>
-                <description>Entity for the Node that is displayed in the widget.</description>
-            </property>
-            <property key="dataSource" type="enumeration" defaultValue="xpath">
-                <caption>Data Source</caption>
-                <description>Choose how you retrieve the top-level data</description>
-                <enumerationValues>
-                    <enumerationValue key="xpath">XPath</enumerationValue>
-                    <enumerationValue key="mf">Microflow</enumerationValue>
-                    <enumerationValue key="nf">Nanoflow</enumerationValue>
-                </enumerationValues>
-            </property>
-            <property key="constraint" required="false" type="entityConstraint" entityProperty="nodeEntity">
-                <caption>Node constraint</caption>
-                <description>The xpath constraint on the entity.</description>
-            </property>
-            <property key="getDataMf" type="microflow" required="false">
-                <caption>Microflow</caption>
-                <description>Choose 'Microflow' in Data Source and choose a microflow here</description>
-                <returnType type="Object" isList="true" entityProperty="nodeEntity" />
-            </property>
-            <property key="getDataNf" type="nanoflow" required="false">
-                <caption>Nanoflow</caption>
-                <description>Choose 'Nanoflow' in Data Source and choose a nanoflow here.
-NOTE: Non-persistent entities are discouraged as they have unpredictable behavior combined with Nanoflows.
-                </description>
-                <returnType type="Object" isList="true" entityProperty="nodeEntity" />
-            </property>
+            <propertyGroup caption="General">
+                <property key="nodeEntity" type="entity" required="true" allowNonPersistableEntities="true">
+                    <caption>Node Entity</caption>
+                    <description>Entity for the Node that is displayed in the widget.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Scenario">
+                <property key="loadScenario" type="enumeration" defaultValue="partial">
+                    <caption>Load</caption>
+                    <description>Decide what the widget needs to load when it has a context object</description>
+                    <enumerationValues>
+                         <enumerationValue key="partial">Partial (Top-level)</enumerationValue>
+                         <enumerationValue key="all">Whole Tree</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Source">
+                <property key="dataSource" type="enumeration" defaultValue="xpath">
+                    <caption>Data Source</caption>
+                    <description>Choose how you retrieve the data. In case Scenario is set to "Partial" this only applies to top-level data. In case of "Whole Tree", make sure you set the "Root" attribute (see bottom)</description>
+                    <enumerationValues>
+                        <enumerationValue key="xpath">XPath</enumerationValue>
+                        <enumerationValue key="mf">Microflow</enumerationValue>
+                        <enumerationValue key="nf">Nanoflow</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="constraint" required="false" type="entityConstraint" entityProperty="nodeEntity">
+                    <caption>Node constraint</caption>
+                    <description>The xpath constraint on the entity.</description>
+                </property>
+                <property key="getDataMf" type="microflow" required="false">
+                    <caption>Microflow</caption>
+                    <description>Choose 'Microflow' in Data Source and choose a microflow here</description>
+                    <returnType type="Object" isList="true" entityProperty="nodeEntity" />
+                </property>
+                <property key="getDataNf" type="nanoflow" required="false">
+                    <caption>Nanoflow</caption>
+                    <description>Choose 'Nanoflow' in Data Source and choose a nanoflow here.
+    NOTE: Non-persistent entities are discouraged as they have unpredictable behavior combined with Nanoflows.
+                    </description>
+                    <returnType type="Object" isList="true" entityProperty="nodeEntity" />
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Scenario: Whole Tree">
+                <property key="nodeIsRootAttr" type="attribute" entityProperty="nodeEntity" required="false">
+                    <caption>Root attribute</caption>
+                    <description>When loading the whole tree, the widget needs to know which nodes are considered top-level nodes</description>
+                    <attributeTypes>
+                         <attributeType name="Boolean" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
         </propertyGroup>
 
         <!-- ****************
