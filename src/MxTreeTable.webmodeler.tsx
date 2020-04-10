@@ -39,7 +39,8 @@ export class preview extends Component<MxTreeTableContainerProps> {
                     id: "dummy",
                     width: null,
                     originalAttr: "",
-                    label: "Columns dynamically loaded through microflow/nanoflow"
+                    label: "Columns dynamically loaded through microflow/nanoflow",
+                    transFromNanoflow: null
                 }
             ];
         }

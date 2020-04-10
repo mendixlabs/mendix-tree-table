@@ -3,7 +3,7 @@ import { ColumnProps } from "antd/es/table";
 import arrayToTree, { Tree } from "array-to-tree";
 import { ValidationMessage, getObject } from "@jeltemx/mendix-react-widget-utils";
 import { TreeColumnProps, getTreeTableColumns, TableRecord } from "../util/columns";
-import { RowObject, TreeRowObject } from "./objects/row";
+import { RowObject, TreeRowObject } from './objects/row';
 
 configure({ enforceActions: "observed" });
 
@@ -26,15 +26,23 @@ export interface MockStore {
     isLoading: boolean;
 }
 
+export interface RowObjectMxProperties {
+    nodeChildReference: string;
+    hasChildAttr: string;
+    childIsRootAttr: string;
+    uiRowIconAttr: string;
+    uiRowIconPrefix: string;
+    uiRowClassAttr: string;
+}
+
 export interface NodeStoreConstructorOptions {
     contextObject?: mendix.lib.MxObject;
     columns: TreeColumnProps[];
     validColumns: boolean;
     selectFirstOnSingle: boolean;
     validationMessages: ValidationMessage[];
-    nodeChildReference: string;
-    childIsRootAttr: string;
     calculateInitialParents: boolean;
+    rowObjectMxProperties: RowObjectMxProperties;
 
     childLoader: (guids: string[], parentKey: string) => Promise<void>;
     convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
@@ -52,7 +60,6 @@ export class NodeStore {
     @observable public isLoading = false;
     @observable public validationMessages: ValidationMessage[] = [];
     @observable public columns: TreeColumnProps[] = [];
-    @observable public rows: TreeRowObject[] = [];
     @observable public rowObjects: RowObject[] = [];
     @observable public validColumns = true;
     @observable public selectFirstOnSingle = false;
@@ -60,8 +67,7 @@ export class NodeStore {
     @observable public subscriptionHandles: number[] = [];
     @observable public calculateInitialParents = false;
 
-    private nodeChildreference: string;
-    private childIsRootAttr: string;
+    private rowObjectMxProperties: RowObjectMxProperties;
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
     private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     private reset: () => void;
@@ -73,10 +79,9 @@ export class NodeStore {
         validColumns,
         selectFirstOnSingle,
         calculateInitialParents,
-        nodeChildReference,
-        childIsRootAttr,
         childLoader,
         convertMxObjectToRow,
+        rowObjectMxProperties,
         validationMessages,
         resetColumns,
         reset,
@@ -88,8 +93,7 @@ export class NodeStore {
         this.selectFirstOnSingle = selectFirstOnSingle;
         this.calculateInitialParents = calculateInitialParents;
         this.validationMessages = validationMessages;
-        this.nodeChildreference = nodeChildReference;
-        this.childIsRootAttr = childIsRootAttr;
+        this.rowObjectMxProperties = rowObjectMxProperties;
         this.childLoader = childLoader;
         this.convertMxObjectToRow = convertMxObjectToRow;
         this.resetColumns = resetColumns;
@@ -130,6 +134,7 @@ export class NodeStore {
     @action
     setColumns(columns: TreeColumnProps[]): void {
         this.columns = columns;
+        this.rowObjects.forEach(row => row.setColumns(columns));
     }
 
     @action
@@ -149,21 +154,21 @@ export class NodeStore {
 
     @action
     setRowObjects(mxObjects: mendix.lib.MxObject[], level?: number, parent?: string | null): void {
-        this.debug("store: setRowObjects", mxObjects, level);
+        this.debug("store: setRowObjects", mxObjects.length, level);
         const currentRows: RowObject[] = level === -1 ? [] : [...this.rowObjects];
 
         const treeMapping: { [key: string]: string } = {};
         const rootObjectGuids: string[] = [];
 
-        if (this.calculateInitialParents && this.nodeChildreference && this.childIsRootAttr) {
+        if (this.calculateInitialParents && this.rowObjectMxProperties.nodeChildReference && this.rowObjectMxProperties.childIsRootAttr) {
             mxObjects.forEach(obj => {
-                if (obj && obj.has(this.nodeChildreference)) {
-                    obj.getReferences(this.nodeChildreference).forEach(ref => {
+                if (obj && obj.has(this.rowObjectMxProperties.nodeChildReference)) {
+                    obj.getReferences(this.rowObjectMxProperties.nodeChildReference).forEach(ref => {
                         treeMapping[ref] = obj.getGuid();
                     });
                 }
-                if (obj && obj.has(this.childIsRootAttr)) {
-                    if (obj.get(this.childIsRootAttr) as boolean) {
+                if (obj && obj.has(this.rowObjectMxProperties.childIsRootAttr)) {
+                    if (obj.get(this.rowObjectMxProperties.childIsRootAttr) as boolean) {
                         rootObjectGuids.push(obj.getGuid());
                     }
                 }
@@ -178,10 +183,12 @@ export class NodeStore {
                 currentRows.push(
                     new RowObject({
                         mxObject,
+                        columns: this.columns,
                         createTreeRowObject: this.convertMxObjectToRow,
                         parent: parentObj,
                         changeHandler: this.rowChangeHandler(),
-                        isRoot: rootObjectGuids.indexOf(mxObject.getGuid()) !== -1
+                        isRoot: rootObjectGuids.indexOf(mxObject.getGuid()) !== -1,
+                        mxObjectProperties: this.rowObjectMxProperties
                     })
                 );
                 // TODO
@@ -190,7 +197,7 @@ export class NodeStore {
                 // }
             } else {
                 const rowObj = currentRows[objIndex];
-                const references = rowObj._keyValPairs._mxReferences;
+                const references = rowObj.treeObject._mxReferences;
                 if (references && references.length > 0) {
                     // Are there reference that have not been loaded yet?
                     const unFoundRows = references.filter(o => currentRows.filter(c => c.key === o).length === 0);
@@ -359,15 +366,20 @@ export class NodeStore {
             customID: "key"
         };
 
-        const tree = arrayToTree(
-            this.rowObjects.map(r => r.treeObject),
-            arrayToTreeOpts
-        );
+        try {
+            const tree = arrayToTree(
+                toJS(this.rowObjects.map(r => r.treeObject)),
+                arrayToTreeOpts
+            );
 
-        // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
-        // We filter these top level elements from the tree, as they are no longer relevant
+            // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
+            // We filter these top level elements from the tree, as they are no longer relevant
 
-        return tree.filter(treeEl => typeof treeEl._parent === "undefined" && !treeEl._parent);
+            return tree.filter(treeEl => typeof treeEl._parent === "undefined" && !treeEl._parent);
+        } catch (error) {
+            console.warn(error);
+            return [];
+        }
     }
 
     @computed
@@ -376,7 +388,7 @@ export class NodeStore {
 
         return {
             context: this.contextObject ? this.contextObject.getGuid() : null,
-            rows: this.rows.map(row => row.key),
+            rows: this.rowObjects.map(row => row.key),
             columns
         };
     }
@@ -390,16 +402,29 @@ export class NodeStore {
     }
 
     private _hasChildren(row: TreeRowObject): boolean {
-        return this.rows.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
+        return this.rowObjects.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
     }
 
     private _rowChangeHandler(): (guid: string, removedCB: (removed: boolean) => void) => Promise<void> {
         return async (guid: string, removedCB: (removed: boolean) => void): Promise<void> => {
+            this.debug("store: rowChangeHandler", guid);
             const object = await getObject(guid);
+            console.log(object, object?.getReferences(this.rowObjectMxProperties.nodeChildReference));
             if (object) {
                 const found = this.rowObjects.find(entry => entry._obj.getGuid() === object.getGuid());
                 if (found) {
                     found.setMendixObject(object);
+
+                    // TODO Got to make this better. It's dirty, because calculated references are not propagated yet when you have unfound element;
+                    const objRef = object && this.rowObjectMxProperties.nodeChildReference !== "" && object.getReferences(this.rowObjectMxProperties.nodeChildReference) || [];
+                    const unfound = objRef.filter(r => this.findRowObject(r) === null);
+                    const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
+
+                    if (hasRows && unfound.length > 0) {
+                        // Node has children, but some references that have not been loaded yet. Load them all;
+                        this.childLoader(unfound, found.key);
+                    }
+
                     if (removedCB) {
                         removedCB(false);
                     }

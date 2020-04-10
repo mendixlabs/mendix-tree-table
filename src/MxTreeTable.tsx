@@ -11,7 +11,6 @@ import {
     openPage,
     fetchByXpath,
     getObjects,
-    getFormattedValue,
     ValidationMessage,
     getObject,
     commitObject,
@@ -35,6 +34,7 @@ import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
 import { TreeRowObject } from "./store/objects/row";
+import { getReferencePart } from './util/index';
 
 export interface Action extends IAction {}
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -68,7 +68,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     private loadChildData = this._loadChildData.bind(this);
     private getObjectKeyPairs = this._getObjectKeyPairs.bind(this);
     private expanderFunction = this._expanderFunction.bind(this);
-    // private getFormattedOrTransformed = this._getFormattedOrTransformed.bind(this);
     private getColumnsFromDatasource = this._getColumnsFromDatasource.bind(this);
     private getButtons = this._getButtons.bind(this);
 
@@ -76,8 +75,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         super(props);
 
         // Set various properties based on props coming from runtime
-        this.referenceAttr =
-            props.childMethod === "reference" && "" !== props.childReference ? props.childReference.split("/")[0] : "";
+        this.referenceAttr = props.childMethod === "reference" ? getReferencePart(props.childReference) : "";
         this.hasChildAttr =
             props.childMethod !== "disabled" &&
             props.childMethod !== "reference" &&
@@ -86,9 +84,9 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
                 ? props.childBoolean
                 : "";
 
-        this.helperNodeReference = props.helperNodeReference ? props.helperNodeReference.split("/")[0] : "";
-        this.helperContextReference = props.helperContextReference ? props.helperContextReference.split("/")[0] : "";
-        this.helperContextEntity = props.helperContextReference ? props.helperContextReference.split("/")[1] : "";
+        this.helperNodeReference = getReferencePart(props.helperNodeReference);
+        this.helperContextReference = getReferencePart(props.helperContextReference);
+        this.helperContextEntity = getReferencePart(props.helperContextReference, "entity");
 
         this.staticColumns = props.columnMethod === "static";
         this.columnPropsValid =
@@ -103,6 +101,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         this.transformNanoflows = {};
         if (this.staticColumns) {
             this.setTransFormColumns(props.columnList);
+            console.log(this);
         }
 
         // Validations
@@ -115,8 +114,14 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         // Create store
         const storeOpts: NodeStoreConstructorOptions = {
             calculateInitialParents: this.props.loadScenario === "all",
-            nodeChildReference: this.referenceAttr,
-            childIsRootAttr: this.props.nodeIsRootAttr,
+            rowObjectMxProperties: {
+                nodeChildReference: this.referenceAttr,
+                hasChildAttr: this.hasChildAttr,
+                childIsRootAttr: this.props.nodeIsRootAttr,
+                uiRowClassAttr: this.props.uiRowClassAttr,
+                uiRowIconPrefix: this.props.uiIconPrefix,
+                uiRowIconAttr: this.props.uiRowIconAttr
+            },
             validationMessages,
             validColumns: this.columnPropsValid,
             selectFirstOnSingle: this.props.selectSelectFirstOnSingle && this.props.selectMode === "single",
@@ -259,7 +264,8 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
                         originalAttr: headerAttribute,
                         label: obj.get(columnHeaderLabelAttribute) as string,
                         guid: obj.getGuid(),
-                        width: null
+                        width: null,
+                        transFromNanoflow: null
                     };
                     if (typeof columnHeaderClassAttribute === "string" && columnHeaderClassAttribute) {
                         headerProps.className = obj.get(columnHeaderClassAttribute) as string;
@@ -324,7 +330,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         parentKey?: string | null,
         level?: number
     ): Promise<void> {
-        this.debug("handleData", objects, parentKey, level);
+        this.debug("handleData", objects.length, parentKey, level);
 
         try {
             this.store.setRowObjects(objects, level, parentKey);
@@ -347,99 +353,34 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     }
 
     private async _convertMxObjectToRow(
-        mxObject: mendix.lib.MxObject,
-        parentKey?: string | null
+        mxObject: mendix.lib.MxObject
     ): Promise<TreeRowObject> {
-        const attributes = mxObject.getAttributes();
-        const referenceObjects =
-            this.referenceAttr !== "" && -1 < attributes.indexOf(this.referenceAttr)
-                ? mxObject.getReferences(this.referenceAttr)
-                : [];
-
-        let childAttrValue: string | number | boolean | undefined;
-        if (this.hasChildAttr) {
-            childAttrValue = mxObject.get(this.hasChildAttr);
-        }
-
-        let appendIcon: string | null = null;
-
-        if (this.props.uiRowIconAttr) {
-            appendIcon = mxObject.get(this.props.uiRowIconAttr) as string | null;
-        }
-
-        const keyPairValues = await this.getObjectKeyPairs(mxObject, appendIcon);
+        const keyPairValues = await this.getObjectKeyPairs(mxObject);
 
         const retObj: TreeRowObject = {
             key: mxObject.getGuid(),
             ...keyPairValues
         };
 
-        if (this.props.uiRowClassAttr) {
-            const className = mxObject.get(this.props.uiRowClassAttr) as string | null;
-            if (className) {
-                retObj._className = className;
-            }
-        }
-
-        if (appendIcon) {
-            const prefix = this.props.uiIconPrefix || "glyphicon glyphicon-";
-            retObj._icon = `${prefix}${appendIcon}`;
-        }
-
-        if (referenceObjects && 0 < referenceObjects.length) {
-            retObj._mxReferences = referenceObjects;
-            retObj.children = [];
-        } else if (childAttrValue) {
-            retObj._mxHasChildren = true;
-            retObj.children = [];
-        }
-
-        if (typeof parentKey !== "undefined" && parentKey !== null) {
-            retObj._parent = parentKey;
-        }
-
         return retObj;
     }
 
     private _getObjectKeyPairs(
-        obj: mendix.lib.MxObject,
-        appendIcon: string | null
+        obj: mendix.lib.MxObject
     ): Promise<{ [key: string]: string | number | boolean }> {
-        const attributes = obj.getAttributes();
         const { columns } = this.store;
         return Promise.all(
-            columns.map(async (col: TreeColumnProps, index: number) => {
-                if (col.originalAttr && -1 < attributes.indexOf(col.originalAttr)) {
-                    const key = col.id;
-                    let formatted;
-                    if (
-                        this.transformNanoflows[col.originalAttr] &&
-                        typeof this.transformNanoflows[col.originalAttr].nanoflow !== "undefined"
-                    ) {
-                        formatted = (await this.executeAction(
-                            { nanoflow: this.transformNanoflows[col.originalAttr] },
-                            true,
-                            obj
-                        )) as string;
-                    } else {
-                        formatted = getFormattedValue(obj, col.originalAttr);
-                    }
-                    const retVal: { [key: string]: string | number | boolean | ReactNode } = {};
-                    if (appendIcon && index === 0) {
-                        const prefix = this.props.uiIconPrefix || "glyphicon glyphicon-";
-                        retVal[key] = (
-                            <div className="ant-table-cell-with-icon">
-                                <i className={`ant-table-cell-icon ${prefix}${appendIcon}`} />
-                                {formatted}
-                            </div>
-                        );
-                    } else {
-                        retVal[key] = formatted;
-                    }
-                    return retVal;
-                } else {
-                    return {};
+            columns.map(async (col: TreeColumnProps) => {
+                const retVal: { [key: string]: string | number | boolean | ReactNode } = {};
+                if (col.transFromNanoflow && col.transFromNanoflow.nanoflow) {
+                    const formatted = (await this.executeAction(
+                        { nanoflow: col.transFromNanoflow },
+                        true,
+                        obj
+                    )) as string;
+                    retVal[col.id] = formatted;
                 }
+                return retVal;
             })
         ).then(objects => {
             return defaults({}, ...objects);
@@ -447,6 +388,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     }
 
     private async _expanderFunction(record: TableRecord | TreeRowObject, level: number): Promise<void> {
+        this.debug("expanderFunction", record, level);
         try {
             if (typeof record._mxReferences !== "undefined" && record._mxReferences.length > 0) {
                 this.store.setLoading(true);
@@ -787,7 +729,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     private setTransFormColumns(columns: TreeviewColumnProps[]): void {
         this.transformNanoflows = {};
         columns.forEach(column => {
-            if (column.transformNanoflow) {
+            if (column.transformNanoflow && column.transformNanoflow.nanoflow) {
                 this.transformNanoflows[column.columnAttr] = column.transformNanoflow;
             }
         });

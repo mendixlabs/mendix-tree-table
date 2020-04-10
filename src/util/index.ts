@@ -6,14 +6,19 @@ export const createCamelcaseId = (str: string): string => {
     if ("id" === camelCased) {
         return "idId";
     }
+    if ("key" === camelCased) {
+        return "keyId";
+    }
     return camelCased;
 };
 
-export const fetchAttr = (obj: mendix.lib.MxObject, attr: string): Promise<any> =>
-    new Promise((resolve, reject) => {
-        try {
-            obj.fetch(attr, val => resolve(val));
-        } catch (e) {
-            reject(e);
-        }
-    });
+type ReferencePart = "referenceAttr" | "entity";
+
+export const getReferencePart = (reference = "", part: ReferencePart = "referenceAttr"): string => {
+    const partNum = part === "referenceAttr" ? 0 : 1;
+    const parts = reference.split("/");
+    if (reference === "" || parts.length < (partNum + 1)) {
+        return "";
+    }
+    return parts[partNum];
+}

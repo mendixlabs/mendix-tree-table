@@ -1,6 +1,6 @@
 import { createCamelcaseId } from ".";
 import { ColumnProps } from "antd/es/table";
-import { TreeviewColumnProps } from "../../typings/MxTreeTableProps";
+import { TreeviewColumnProps, Nanoflow } from "../../typings/MxTreeTableProps";
 
 export interface TreeColumnProps {
     id: string;
@@ -9,6 +9,7 @@ export interface TreeColumnProps {
     originalAttr: string;
     guid: string | null;
     className?: string | null;
+    transFromNanoflow: Nanoflow | null;
 }
 
 export interface TableRecord {
@@ -31,7 +32,8 @@ export const getColumns = (columns: TreeviewColumnProps[], isStatic = true): Tre
             originalAttr: column.columnAttr,
             width: column.columnWidth && column.columnWidth !== "" ? column.columnWidth : null,
             guid: null,
-            className: column.columnClassName ? column.columnClassName : null
+            className: column.columnClassName ? column.columnClassName : null,
+            transFromNanoflow: column.transformNanoflow && column.transformNanoflow.nanoflow ? column.transformNanoflow : null
         };
         return tableColumn;
     });
