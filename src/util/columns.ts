@@ -33,7 +33,8 @@ export const getColumns = (columns: TreeviewColumnProps[], isStatic = true): Tre
             width: column.columnWidth && column.columnWidth !== "" ? column.columnWidth : null,
             guid: null,
             className: column.columnClassName ? column.columnClassName : null,
-            transFromNanoflow: column.transformNanoflow && column.transformNanoflow.nanoflow ? column.transformNanoflow : null
+            transFromNanoflow:
+                column.transformNanoflow && column.transformNanoflow.nanoflow ? column.transformNanoflow : null
         };
         return tableColumn;
     });

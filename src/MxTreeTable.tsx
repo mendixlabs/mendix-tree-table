@@ -34,7 +34,7 @@ import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
 import { TreeRowObject } from "./store/objects/row";
-import { getReferencePart } from './util/index';
+import { getReferencePart } from "./util/index";
 
 export interface Action extends IAction {}
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -352,9 +352,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         }
     }
 
-    private async _convertMxObjectToRow(
-        mxObject: mendix.lib.MxObject
-    ): Promise<TreeRowObject> {
+    private async _convertMxObjectToRow(mxObject: mendix.lib.MxObject): Promise<TreeRowObject> {
         const keyPairValues = await this.getObjectKeyPairs(mxObject);
 
         const retObj: TreeRowObject = {
@@ -365,9 +363,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         return retObj;
     }
 
-    private _getObjectKeyPairs(
-        obj: mendix.lib.MxObject
-    ): Promise<{ [key: string]: string | number | boolean }> {
+    private _getObjectKeyPairs(obj: mendix.lib.MxObject): Promise<{ [key: string]: string | number | boolean }> {
         const { columns } = this.store;
         return Promise.all(
             columns.map(async (col: TreeColumnProps) => {

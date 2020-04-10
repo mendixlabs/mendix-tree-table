@@ -3,7 +3,7 @@ import { ColumnProps } from "antd/es/table";
 import arrayToTree, { Tree } from "array-to-tree";
 import { ValidationMessage, getObject } from "@jeltemx/mendix-react-widget-utils";
 import { TreeColumnProps, getTreeTableColumns, TableRecord } from "../util/columns";
-import { RowObject, TreeRowObject } from './objects/row';
+import { RowObject, TreeRowObject } from "./objects/row";
 
 configure({ enforceActions: "observed" });
 
@@ -160,7 +160,11 @@ export class NodeStore {
         const treeMapping: { [key: string]: string } = {};
         const rootObjectGuids: string[] = [];
 
-        if (this.calculateInitialParents && this.rowObjectMxProperties.nodeChildReference && this.rowObjectMxProperties.childIsRootAttr) {
+        if (
+            this.calculateInitialParents &&
+            this.rowObjectMxProperties.nodeChildReference &&
+            this.rowObjectMxProperties.childIsRootAttr
+        ) {
             mxObjects.forEach(obj => {
                 if (obj && obj.has(this.rowObjectMxProperties.nodeChildReference)) {
                     obj.getReferences(this.rowObjectMxProperties.nodeChildReference).forEach(ref => {
@@ -367,10 +371,7 @@ export class NodeStore {
         };
 
         try {
-            const tree = arrayToTree(
-                toJS(this.rowObjects.map(r => r.treeObject)),
-                arrayToTreeOpts
-            );
+            const tree = arrayToTree(toJS(this.rowObjects.map(r => r.treeObject)), arrayToTreeOpts);
 
             // When creating the tree, it can be possible to get orphaned children (a node that has a parent id, but parent removed).
             // We filter these top level elements from the tree, as they are no longer relevant
@@ -416,7 +417,11 @@ export class NodeStore {
                     found.setMendixObject(object);
 
                     // TODO Got to make this better. It's dirty, because calculated references are not propagated yet when you have unfound element;
-                    const objRef = object && this.rowObjectMxProperties.nodeChildReference !== "" && object.getReferences(this.rowObjectMxProperties.nodeChildReference) || [];
+                    const objRef =
+                        (object &&
+                            this.rowObjectMxProperties.nodeChildReference !== "" &&
+                            object.getReferences(this.rowObjectMxProperties.nodeChildReference)) ||
+                        [];
                     const unfound = objRef.filter(r => this.findRowObject(r) === null);
                     const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
 

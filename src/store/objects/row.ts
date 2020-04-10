@@ -1,7 +1,7 @@
 import { observable, action, computed, flow, toJS } from "mobx";
 import { RowObjectMxProperties } from "..";
 import { TreeColumnProps } from "../../util/columns";
-import { createElement } from 'react';
+import { createElement } from "react";
 import { getFormattedValue } from "@jeltemx/mendix-react-widget-utils";
 
 export interface RowObjectOptions {
@@ -36,14 +36,14 @@ export class RowObject {
     public _createTreeRowObject: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
 
     @observable _parent: string | null;
-    @observable _expanded: boolean = false;
-    @observable _selected: boolean = false;
+    @observable _expanded = false;
+    @observable _selected = false;
     @observable _rowClass: string | null = null;
     @observable _iconClass: string | null = null;
 
     @observable _keyValTransformedPairs: KeyValues = {};
     @observable _keyValCorePairs: KeyValues = {};
-    @observable _hasChildren: boolean = false;
+    @observable _hasChildren = false;
     @observable _columns: TreeColumnProps[];
 
     fixAttributes = flow(function*(this: RowObject) {
@@ -178,7 +178,11 @@ export class RowObject {
         // We're only setting the columns that don't need a transform nanoflow
         const keyValues: KeyValues = {};
         this.columns.forEach(col => {
-            if (col.originalAttr && this._obj.has(col.originalAttr) && !(col.transFromNanoflow && col.transFromNanoflow.nanoflow)) {
+            if (
+                col.originalAttr &&
+                this._obj.has(col.originalAttr) &&
+                !(col.transFromNanoflow && col.transFromNanoflow.nanoflow)
+            ) {
                 keyValues[col.id] = getFormattedValue(this._obj, col.originalAttr);
             }
         });
@@ -202,9 +206,11 @@ export class RowObject {
 
     @computed
     get hasNanoflowColumns(): boolean {
-        return this.columns.filter(col => {
-            return !!(col.transFromNanoflow && col.transFromNanoflow.nanoflow);
-        }).length > 0;
+        return (
+            this.columns.filter(col => {
+                return !!(col.transFromNanoflow && col.transFromNanoflow.nanoflow);
+            }).length > 0
+        );
     }
 
     @computed
@@ -229,7 +235,7 @@ export class RowObject {
     @computed
     get hasChildrenFromAttr(): boolean {
         const { hasChildAttr } = this._mxObjectProperties;
-        return hasChildAttr ? this._obj.get(hasChildAttr) as boolean : false;
+        return hasChildAttr ? (this._obj.get(hasChildAttr) as boolean) : false;
     }
 
     @computed
@@ -267,12 +273,13 @@ export class RowObject {
 
         if (iconClassName !== null && firstColumnId !== null && keyVals[firstColumnId]) {
             const formatted = keyVals[firstColumnId];
-            keyVals[firstColumnId] = createElement("div", {
-                className: "ant-table-cell-with-icon"
-            }, [
-                createElement("i", { className: `ant-table-cell-icon ${iconClassName}` }),
-                formatted
-            ]);
+            keyVals[firstColumnId] = createElement(
+                "div",
+                {
+                    className: "ant-table-cell-with-icon"
+                },
+                [createElement("i", { className: `ant-table-cell-icon ${iconClassName}` }), formatted]
+            );
         }
 
         return toJS(keyVals);
