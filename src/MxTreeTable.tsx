@@ -1,7 +1,6 @@
 import { Component, ReactNode, createElement } from "react";
 import { hot } from "react-hot-loader/root";
 import { findDOMNode } from "react-dom";
-import defaults from "lodash/defaults";
 import { observer } from "mobx-react";
 import {
     IAction,
@@ -363,23 +362,35 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         return retObj;
     }
 
-    private _getObjectKeyPairs(obj: mendix.lib.MxObject): Promise<{ [key: string]: string | number | boolean }> {
+    private _getObjectKeyPairs(
+        obj: mendix.lib.MxObject
+    ): Promise<{ [key: string]: string | number | boolean | ReactNode }> {
         const { columns } = this.store;
         return Promise.all(
-            columns.map(async (col: TreeColumnProps) => {
-                const retVal: { [key: string]: string | number | boolean | ReactNode } = {};
-                if (col.transFromNanoflow && col.transFromNanoflow.nanoflow) {
-                    const formatted = (await this.executeAction(
-                        { nanoflow: col.transFromNanoflow },
-                        true,
-                        obj
-                    )) as string;
-                    retVal[col.id] = formatted;
-                }
-                return retVal;
-            })
+            columns
+                .filter(col => col.transFromNanoflow && col.transFromNanoflow.nanoflow)
+                .map(async (col: TreeColumnProps) => {
+                    let returnValue: { id?: string; value?: string } = {};
+                    if (col.transFromNanoflow) {
+                        const formatted = (await this.executeAction(
+                            { nanoflow: col.transFromNanoflow },
+                            true,
+                            obj
+                        )) as string;
+                        returnValue = { id: col.id, value: formatted };
+                    }
+                    return returnValue;
+                })
         ).then(objects => {
-            return defaults({}, ...objects);
+            const retVal: { [key: string]: string | number | boolean | ReactNode } = {};
+
+            objects.forEach(obj => {
+                if (obj.id) {
+                    retVal[obj.id] = obj.value;
+                }
+            });
+
+            return retVal;
         });
     }
 
