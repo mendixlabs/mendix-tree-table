@@ -10,6 +10,8 @@ export interface RowObjectOptions {
 
     isRoot?: boolean;
     parent?: string | null;
+    expanded?: boolean;
+    selected?: boolean;
     changeHandler?: (guid?: string, removedCb?: (removed: boolean) => void) => void | Promise<void>;
     mxObjectProperties: RowObjectMxProperties;
     columns: TreeColumnProps[];
@@ -66,12 +68,16 @@ export class RowObject {
         columns,
         isRoot = false,
         parent = null,
+        selected = false,
+        expanded = false,
         changeHandler = (): void => {},
         mxObjectProperties
     }: RowObjectOptions) {
         this._obj = mxObject;
         this._parent = parent;
         this._isRoot = isRoot;
+        this._expanded = expanded;
+        this._selected = selected;
         this._columns = columns;
         this._mxObjectProperties = mxObjectProperties;
 

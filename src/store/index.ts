@@ -13,6 +13,13 @@ export interface TreeGuids {
     columns: string[];
 }
 
+export interface TableState {
+    context: string | null;
+    lastUpdate?: number;
+    expanded: string[];
+    selected: string[];
+}
+
 export interface MockStore {
     rowTree: TreeRowObject[];
     setSelected: (keys?: string[]) => void;
@@ -42,10 +49,13 @@ export interface NodeStoreConstructorOptions {
     selectFirstOnSingle: boolean;
     validationMessages: ValidationMessage[];
     calculateInitialParents: boolean;
+    resetState: boolean;
     rowObjectMxProperties: RowObjectMxProperties;
 
     childLoader: (guids: string[], parentKey: string) => Promise<void>;
     convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
+    getInitialTableState: (guid: string) => TableState;
+    writeTableState: (state: TableState) => void;
     resetColumns: (col: string) => void;
     reset: () => void;
     debug: (...args: unknown[]) => void;
@@ -55,6 +65,8 @@ export class NodeStore {
     public debug: (...args: unknown[]) => void;
     public hasChildren = this._hasChildren.bind(this);
     public rowChangeHandler = this._rowChangeHandler.bind(this);
+    public findParents = this._findParents.bind(this);
+    public setSelectedFromExternal = this._setSelectedFromExternal.bind(this);
 
     @observable public contextObject: mendix.lib.MxObject | null;
     @observable public isLoading = false;
@@ -65,11 +77,19 @@ export class NodeStore {
     @observable public selectFirstOnSingle = false;
     @observable public lastLoadFromContext: number | null = null;
     @observable public subscriptionHandles: number[] = [];
+
     @observable public calculateInitialParents = false;
+    @observable public resetState = false;
 
     private rowObjectMxProperties: RowObjectMxProperties;
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
     private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
+    private getInitialTableState: (guid: string) => TableState;
+    // @ts-ignore
+    private writeTableState: (state: TableState) => void;
+
+    private needToCalculateInitialParents: boolean;
+    private needToRestoreStateOnContextChange: boolean;
     private reset: () => void;
     private resetColumns: (col: string) => void;
 
@@ -83,6 +103,9 @@ export class NodeStore {
         convertMxObjectToRow,
         rowObjectMxProperties,
         validationMessages,
+        getInitialTableState,
+        writeTableState,
+        resetState,
         resetColumns,
         reset,
         debug
@@ -92,8 +115,13 @@ export class NodeStore {
         this.validColumns = validColumns;
         this.selectFirstOnSingle = selectFirstOnSingle;
         this.calculateInitialParents = calculateInitialParents;
+        this.needToCalculateInitialParents = calculateInitialParents;
         this.validationMessages = validationMessages;
         this.rowObjectMxProperties = rowObjectMxProperties;
+        this.getInitialTableState = getInitialTableState;
+        this.writeTableState = writeTableState;
+        this.resetState = resetState;
+        this.needToRestoreStateOnContextChange = resetState;
         this.childLoader = childLoader;
         this.convertMxObjectToRow = convertMxObjectToRow;
         this.resetColumns = resetColumns;
@@ -108,6 +136,19 @@ export class NodeStore {
     @action
     setContext(obj?: mendix.lib.MxObject): void {
         this.debug("Store: setContext", obj);
+        if (
+            this.contextObject !== null &&
+            obj &&
+            this.contextObject.getGuid() !== obj.getGuid() &&
+            this.needToCalculateInitialParents
+        ) {
+            if (this.needToCalculateInitialParents) {
+                this.calculateInitialParents = true;
+            }
+            if (this.needToRestoreStateOnContextChange) {
+                this.resetState = true;
+            }
+        }
         this.contextObject = obj || null;
     }
 
@@ -156,6 +197,7 @@ export class NodeStore {
     setRowObjects(mxObjects: mendix.lib.MxObject[], level?: number, parent?: string | null): void {
         this.debug("store: setRowObjects", mxObjects.length, level);
         const currentRows: RowObject[] = level === -1 ? [] : [...this.rowObjects];
+        let initialState: TableState = { context: this.contextObject?.getGuid() || null, expanded: [], selected: [] };
 
         const treeMapping: { [key: string]: string } = {};
         const rootObjectGuids: string[] = [];
@@ -179,6 +221,11 @@ export class NodeStore {
             });
         }
 
+        if (this.resetState && this.contextObject) {
+            initialState = this.getInitialTableState(this.contextObject.getGuid());
+            console.log(initialState);
+        }
+
         mxObjects.forEach(mxObject => {
             const objIndex = currentRows.findIndex(row => row.key === mxObject.getGuid());
             if (objIndex === -1) {
@@ -192,6 +239,8 @@ export class NodeStore {
                         parent: parentObj,
                         changeHandler: this.rowChangeHandler(),
                         isRoot: rootObjectGuids.indexOf(mxObject.getGuid()) !== -1,
+                        expanded: initialState.expanded.indexOf(mxObject.getGuid()) !== -1,
+                        selected: initialState.selected.indexOf(mxObject.getGuid()) !== -1,
                         mxObjectProperties: this.rowObjectMxProperties
                     })
                 );
@@ -220,6 +269,9 @@ export class NodeStore {
         if (this.calculateInitialParents) {
             this.disableCalculateInitial();
         }
+        if (this.resetState) {
+            this.disableResetState();
+        }
     }
 
     @action
@@ -241,7 +293,7 @@ export class NodeStore {
     }
 
     @action
-    setExpanded(keys?: string[]): void {
+    setExpanded(keys?: string[], writeState = true): void {
         this.debug("store: setExpanded", keys);
         const current = this.expandedKeys;
         const newKeys = keys || [];
@@ -262,10 +314,14 @@ export class NodeStore {
                 obj.setExpanded(true);
             }
         });
+
+        if (writeState) {
+            this.writeTableState(this.tableState);
+        }
     }
 
     @action
-    setSelected(keys?: string[]): void {
+    setSelected(keys?: string[], writeState = true): void {
         this.debug("store: setSelected", keys);
         const current = this.selectedRows;
         const newKeys = keys || [];
@@ -286,6 +342,10 @@ export class NodeStore {
                 obj.setSelected(true);
             }
         });
+
+        if (writeState) {
+            this.writeTableState(this.tableState);
+        }
     }
 
     @action
@@ -336,6 +396,11 @@ export class NodeStore {
     @action
     disableCalculateInitial(): void {
         this.calculateInitialParents = false;
+    }
+
+    @action
+    disableResetState(): void {
+        this.resetState = false;
     }
 
     // **********************
@@ -394,8 +459,17 @@ export class NodeStore {
         };
     }
 
+    @computed
+    get tableState(): TableState {
+        return {
+            context: this.contextObject ? this.contextObject.getGuid() : null,
+            expanded: this.expandedKeys,
+            selected: this.selectedRows
+        };
+    }
+
     public findRowObject(guid: string): RowObject | null {
-        if (!this.rowObjects) {
+        if (!this.rowObjects || !guid) {
             return null;
         }
         const found = this.rowObjects.find(e => e.key === guid);
@@ -404,6 +478,30 @@ export class NodeStore {
 
     private _hasChildren(row: TreeRowObject): boolean {
         return this.rowObjects.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
+    }
+
+    private _setSelectedFromExternal(guid: string): void {
+        const object = this.findRowObject(guid);
+        if (object) {
+            const parents = this.findParents(object);
+            this.setSelected([object.key]);
+            this.setExpanded(parents.map(p => p.key));
+        }
+    }
+
+    private _findParents(rowObject: RowObject): RowObject[] {
+        let tree = rowObject;
+        const returnArray: RowObject[] = [];
+        while (tree._parent) {
+            const parent = this.findRowObject(tree._parent);
+            if (parent) {
+                returnArray.push(parent);
+                tree = parent;
+            } else {
+                break;
+            }
+        }
+        return returnArray;
     }
 
     private _rowChangeHandler(): (guid: string, removedCB: (removed: boolean) => void) => Promise<void> {

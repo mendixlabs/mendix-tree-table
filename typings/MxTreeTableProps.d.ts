@@ -21,6 +21,7 @@ export type ChildDataSource = "disabled" | "reference" | "microflow" | "nanoflow
 export type SelectionMode = "none" | "single" | "multi";
 export type ColumnMethod = "static" | "microflow";
 export type LoadScenario = "partial" | "all";
+export type StateManagementType = "disabled" | "localStorage" /*| "mendix"*/;
 
 export interface TreeviewColumnProps {
     columnHeader: string;
@@ -91,4 +92,12 @@ export interface MxTreeTableContainerProps extends CommonProps {
     selectOnChangeMicroflow: string;
     selectOnChangeNanoflow: Nanoflow;
     selectActionButtons: ActionButtonProps[];
+
+    stateManagementType: StateManagementType;
+    stateLocalStorageTime: number;
+    // stateEntity: string;
+    // getStateObjectMicroflow: string;
+    // stateNodeSelectionReference: string;
+    // stateNodeExpandReference: string;
+    experimentalExposeSetSelected: boolean;
 }

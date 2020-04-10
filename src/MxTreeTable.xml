@@ -131,31 +131,35 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
         *********************-->
 
         <propertyGroup caption="Columns">
-            <property key="columnMethod" type="enumeration" defaultValue="static">
-                <caption>Definition</caption>
-                <description>How you define the columns.
-    - You will need to take care of your own sorting when getting columns dynamically.</description>
-                <enumerationValues>
-                    <enumerationValue key="static">List</enumerationValue>
-                    <enumerationValue key="microflow">Microflow (Dynamic)</enumerationValue>
-                    <!-- Disabled nanoflows, as this results in weird behavior -->
-                    <!-- <enumerationValue key="nanoflow">Nanoflow (Dynamic)</enumerationValue> -->
-                </enumerationValues>
-            </property>
-            <property key="columnList" type="object" isList="true" required="false">
-                <caption>List</caption>
-                <description>Define the columns in the Tree Table</description>
-                <properties>
-                    <!-- ****************
-                            COLUMN DATA
-                    *********************-->
-                    <propertyGroup caption="Column Data">
+            <propertyGroup caption="General">
+                <property key="columnMethod" type="enumeration" defaultValue="static">
+                    <caption>Definition</caption>
+                    <description>How you define the columns.
+- You will need to take care of your own sorting when getting columns dynamically.</description>
+                    <enumerationValues>
+                        <enumerationValue key="static">List</enumerationValue>
+                        <enumerationValue key="microflow">Dynamic (Microflow)</enumerationValue>
+                        <!-- Disabled nanoflows, as this results in weird behavior -->
+                        <!-- <enumerationValue key="nanoflow">Nanoflow (Dynamic)</enumerationValue> -->
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="List">
+                <property key="columnList" type="object" isList="true" required="false">
+                    <caption>List</caption>
+                    <description>Define the columns in the Tree Table</description>
+                    <properties>
+                        <!-- ****************
+                                COLUMN DATA
+                        *********************-->
                         <property key="columnHeader" type="string" required="false" defaultValue="">
                             <caption>Caption</caption>
+                            <category>Column Data</category>
                             <description>Title that is above the column</description>
                         </property>
                         <property key="columnAttr" type="attribute" entityProperty="../nodeEntity" required="true">
                             <caption>Attribute</caption>
+                            <category>Column Data</category>
                             <description>Attribute that holds the value</description>
                             <attributeTypes>
                                 <attributeType name="AutoNumber" />
@@ -171,68 +175,63 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                         </property>
                         <property key="transformNanoflow" type="nanoflow" required="false" entityProperty="../nodeEntity">
                             <caption>Transform Nanoflow</caption>
+                            <category>Column Data</category>
                             <description>Use this nanoflow to transform the data to a string</description>
                             <returnType type="String" />
                         </property>
-                    </propertyGroup>
-                    <!-- ****************
-                            COLUMN STYLING
-                    *********************-->
-                    <propertyGroup caption="Column UI">
+                        <!-- ****************
+                                COLUMN STYLING
+                        *********************-->
                         <property key="columnWidth" type="string" required="false" defaultValue="">
                             <caption>Width</caption>
+                            <category>Column UI</category>
                             <description>Set this to either a number (like '100' for 100px) or a string ('50%')</description>
                         </property>
                         <property key="columnClassName" type="string" required="false" defaultValue="">
                             <caption>ClassName</caption>
+                            <category>Column UI</category>
                             <description>Set a classname for this column. This is preferred over setting a certain width</description>
                         </property>
-                    </propertyGroup>
-
-                </properties>
-            </property>
-        </propertyGroup>
-
-        <!-- ****************
-                DYNAMIC COLUMNS
-        *********************-->
-
-        <propertyGroup caption="Dynamic Columns">
-            <property key="columnHeaderEntity" type="entity" required="false" allowNonPersistableEntities="true">
-                <caption>Column entity</caption>
-                <description>Used when you set the column definition (See Column) to Microflow/Nanoflow</description>
-            </property>
-            <property key="columnHeaderLabelAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
-                <caption>Label</caption>
-                <description>Attribute that holds the label</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="columnHeaderAttrAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
-                <caption>Attribute</caption>
-                <description>Attribute that holds the attribute name</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="columnHeaderClassAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
-                <caption>Class</caption>
-                <description>Attribute that holds the class name</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="columnHeaderMicroflow" type="microflow" required="false">
-                <caption>Microflow</caption>
-                <description>Choose 'Microflow' in 'Definition' and choose a microflow here</description>
-                <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
-            </property>
-            <!-- <property key="columnHeaderNanoflow" type="nanoflow" required="false">
-                <caption>Nanoflow</caption>
-                <description>Choose 'Nanoflow' in 'Definition' and choose a nnanoflow here</description>
-                <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
-            </property> -->
+                    </properties>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Dynamic">
+                <property key="columnHeaderEntity" type="entity" required="false" allowNonPersistableEntities="true">
+                    <caption>Column entity</caption>
+                    <description>Used when you set the column definition (See Column) to Microflow/Nanoflow</description>
+                </property>
+                <property key="columnHeaderLabelAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
+                    <caption>Label</caption>
+                    <description>Attribute that holds the label</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="columnHeaderAttrAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
+                    <caption>Attribute</caption>
+                    <description>Attribute that holds the attribute name</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="columnHeaderClassAttribute" type="attribute" entityProperty="columnHeaderEntity" required="false">
+                    <caption>Class</caption>
+                    <description>Attribute that holds the class name</description>
+                    <attributeTypes>
+                        <attributeType name="String" />
+                    </attributeTypes>
+                </property>
+                <property key="columnHeaderMicroflow" type="microflow" required="false">
+                    <caption>Microflow</caption>
+                    <description>Choose 'Microflow' in 'Definition' and choose a microflow here</description>
+                    <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
+                </property>
+                <!-- <property key="columnHeaderNanoflow" type="nanoflow" required="false">
+                    <caption>Nanoflow</caption>
+                    <description>Choose 'Nanoflow' in 'Definition' and choose a nnanoflow here</description>
+                    <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
+                </property> -->
+            </propertyGroup>
         </propertyGroup>
 
         <!-- ****************
@@ -432,6 +431,68 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                             </property>
                         </propertyGroup>
                     </properties>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+
+        <!-- ****************
+            MISC
+        *********************-->
+
+        <propertyGroup caption="Misc">
+            <propertyGroup caption="State Management">
+                <property key="stateManagementType" type="enumeration" defaultValue="disabled">
+                    <caption>Type</caption>
+                    <description>
+Note: State management (currently) ONLY works when you load a whole tree (see Data section). In case of 'Top level', it will be disabled.
+
+- If you use Local Storage, it will save the state in your browser, so you won't have to save anything on the server.
+- If you use Mendix, you will need to set up the 'Use Mendix' section at the bottom.
+                    </description>
+                    <enumerationValues>
+                         <enumerationValue key="disabled">Disabled</enumerationValue>
+                         <enumerationValue key="localStorage">Local Storage (browser)</enumerationValue>
+                         <!-- <enumerationValue key="mendix">Mendix (server) NOT WORKING YET!!</enumerationValue> -->
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Local Storage">
+                <property key="stateLocalStorageTime" type="integer" required="true" defaultValue="60">
+                    <caption>Timeout</caption>
+                    <description>Local Storage Timeout for State Management is set in MINUTES. When the state is older, it will be ignored</description>
+                </property>
+            </propertyGroup>
+            <!-- <propertyGroup caption="Mendix">
+                <property key="stateEntity" type="entity" required="false" allowNonPersistableEntities="true">
+                    <caption>State entity</caption>
+                    <description>This state entity will help you keep the state of the table.
+
+- State should only be set for the current view and current user, so you can keep track of any changes in expand/selection for a certain user. That's the reason
+- It will determine which references (selection/expand) need to be set. When loading the tree for the first time, it will try to restore the old state.</description>
+                </property>
+                <property key="getStateObjectMicroflow" type="microflow" required="false">
+                    <caption>Get state Microflow</caption>
+                    <description>Load the state object for this particular view</description>
+                    <returnType type="Object" entityProperty="stateEntity" />
+                </property>
+                <property key="stateNodeSelectionReference" type="entity" required="false" entityProperty="stateEntity" isPath="yes" pathType="referenceSet" allowNonPersistableEntities="true">
+                    <caption>Selection reference</caption>
+                    <description>Reference to Node Entity (reference set) that shows which nodes are SELECTED</description>
+                </property>
+                <property key="stateNodeExpandReference" type="entity" required="false" entityProperty="stateEntity" isPath="yes" pathType="referenceSet" allowNonPersistableEntities="true">
+                    <caption>Expand reference</caption>
+                    <description>Reference to Node Entity (reference set) that shows which nodes are EXPANDED</description>
+                </property>
+            </propertyGroup> -->
+            <propertyGroup caption="Experimental">
+                <property key="experimentalExposeSetSelected" type="boolean" defaultValue="false">
+                    <caption>Expose setSelected</caption>
+                    <description>This is an EXPERIMENTAL feature. It will expose the function to select a certain object in the Tree Table, so you can target it with a Nanoflow + Javascript Action.
+
+Notes:
+- This is EXPERIMENTAL. Please debug in the console when having problems. No guarantees that this feature will stay in the widget.
+- This only works properly when the whole tree is loaded, or at least all parents + selected node. It will try to expand the parents if possible.
+- The name of the function will depend on the context. This is done to make sure the function is unique. The name of the function is "window.__TreeTable_{guid}_select", where "{guid}" is the ID of the context object. When executing this in a Javascript action, please verify that the function exists.</description>
                 </property>
             </propertyGroup>
         </propertyGroup>

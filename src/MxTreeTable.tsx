@@ -2,6 +2,7 @@ import { Component, ReactNode, createElement } from "react";
 import { hot } from "react-hot-loader/root";
 import { findDOMNode } from "react-dom";
 import { observer } from "mobx-react";
+import { get as getLocalStorage, set as setLocalStorage } from "local-storage";
 import {
     IAction,
     getObjectContextFromObjects,
@@ -34,6 +35,7 @@ import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
 import { TreeRowObject } from "./store/objects/row";
 import { getReferencePart } from "./util/index";
+import { TableState } from "./store/index";
 
 export interface Action extends IAction {}
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -63,6 +65,8 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     private handleData = this._handleData.bind(this);
     private convertMxObjectToRow = this._convertMxObjectToRow.bind(this);
     private resetColumns = this._resetColumnsDebounce.bind(this);
+    private getInitialState = this._getInitialState.bind(this);
+    private writeTableState = this._writeTableState.bind(this);
     private executeAction = this._executeAction.bind(this);
     private loadChildData = this._loadChildData.bind(this);
     private getObjectKeyPairs = this._getObjectKeyPairs.bind(this);
@@ -100,7 +104,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         this.transformNanoflows = {};
         if (this.staticColumns) {
             this.setTransFormColumns(props.columnList);
-            console.log(this);
         }
 
         // Validations
@@ -128,6 +131,10 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             convertMxObjectToRow: this.convertMxObjectToRow,
             childLoader: this.loadChildData,
             resetColumns: this.resetColumns,
+            getInitialTableState: this.getInitialState,
+            writeTableState: this.writeTableState,
+            // TODO make this a check if you can reset state!
+            resetState: true,
             reset: this.reset,
             debug: this.debug
         };
@@ -157,8 +164,23 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             this.widgetId = domNode.getAttribute("widgetId") || undefined;
         }
 
+        if (nextProps.experimentalExposeSetSelected && this.store.contextObject) {
+            const guid = this.store.contextObject.getGuid();
+            // @ts-ignore
+            if (typeof window[`__TreeTable_${guid}_select`] !== "undefined") {
+                // @ts-ignore
+                delete window[`__TreeTable_${guid}_select`];
+            }
+        }
+
         this.store.setContext(nextProps.mxObject);
         this.store.resetSubscriptions("MxTreeTable componentReceiveProps");
+
+        if (nextProps.experimentalExposeSetSelected && nextProps.mxObject) {
+            const guid = nextProps.mxObject.getGuid();
+            // @ts-ignore
+            window[`__TreeTable_${guid}_select`] = this.store.setSelectedFromExternal.bind(this.store);
+        }
 
         if (nextProps.mxObject) {
             this.store.setLoading(true);
@@ -289,7 +311,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
 
     private async _fetchData(mxObject?: mendix.lib.MxObject): Promise<void> {
         this.debug("fetchData", mxObject ? mxObject.getGuid() : null, this.props.dataSource);
-        this.store.setExpanded();
+        this.store.setExpanded([], false);
         try {
             let objects: mendix.lib.MxObject[] = [];
             if (this.props.dataSource === "xpath" && this.props.nodeEntity && mxObject) {
@@ -701,6 +723,47 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             await this.selectionAction(selectedObjects, null, selectOnChangeNanoflow);
             this.store.resetSubscriptions("onSelectAction nf");
         }
+    }
+
+    // **********************
+    // STATE MANAGEMENT
+    // **********************
+
+    private _getInitialState(guid: string): TableState {
+        const { stateManagementType } = this.props;
+        const key = `TreeTableState-${guid}`;
+        const currentDateTime = +new Date();
+        const emptyState: TableState = {
+            context: guid,
+            expanded: [],
+            selected: []
+        };
+        if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
+            return emptyState;
+        }
+        const localStoredState = getLocalStorage<TableState>(key) as TableState | null;
+        this.debug("getTableState", localStoredState);
+        if (
+            localStoredState !== null &&
+            localStoredState.lastUpdate &&
+            currentDateTime - localStoredState.lastUpdate < this.props.stateLocalStorageTime * 1000 * 60
+        ) {
+            return localStoredState;
+        }
+
+        this.writeTableState(emptyState);
+        return emptyState;
+    }
+
+    private _writeTableState(state: TableState): void {
+        const { stateManagementType } = this.props;
+        if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
+            return;
+        }
+        this.debug("writeTableState", state);
+        const key = `TreeTableState-${state.context}`;
+        state.lastUpdate = +new Date();
+        setLocalStorage(key, state);
     }
 
     // **********************

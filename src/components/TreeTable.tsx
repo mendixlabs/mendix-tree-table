@@ -199,8 +199,6 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
             this.setState({
                 lastLoadFromContext: newProps.store.lastLoadFromContext
             });
-            // TODO see if this is still necessary?
-            // this.collapseAll();
         }
     }
 
