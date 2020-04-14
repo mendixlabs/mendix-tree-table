@@ -284,7 +284,8 @@ export class RowObject {
                 {
                     className: "ant-table-cell-with-icon"
                 },
-                [createElement("i", { className: `ant-table-cell-icon ${iconClassName}` }), formatted]
+                createElement("i", { className: `ant-table-cell-icon ${iconClassName}` }),
+                formatted
             );
         }
 

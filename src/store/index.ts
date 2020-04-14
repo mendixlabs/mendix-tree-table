@@ -537,9 +537,11 @@ export class NodeStore {
 
                     // TODO Got to make this better. It's dirty, because calculated references are not propagated yet when you have unfound element;
                     const objRef =
-                        (object &&
+                        (
                             this.rowObjectMxProperties.nodeChildReference !== "" &&
-                            object.getReferences(this.rowObjectMxProperties.nodeChildReference)) ||
+                            object.getReferences(this.rowObjectMxProperties.nodeChildReference)
+                        )
+                             ||
                         [];
                     const unfound = objRef.filter(r => this.findRowObject(r) === null);
                     const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
