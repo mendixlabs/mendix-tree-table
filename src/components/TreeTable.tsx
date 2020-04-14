@@ -1,7 +1,7 @@
 import { Component, ReactNode, createElement } from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import Table, { TableRowSelection } from "antd/es/table";
+import Table, { TableRowSelection, ColumnProps } from "antd/es/table";
 
 // Importing seperate so we don't pollute the CSS too much
 import "../ui/MxTreeTable.scss";
@@ -9,7 +9,7 @@ import "../ui/MxTreeTable.scss";
 import { Alerts } from "./Alert";
 import { SelectionMode } from "../../typings/MxTreeTableProps";
 import { NodeStore } from "../store";
-import { TableRecord } from "../util/columns";
+import { TableRecord } from '../util/columns';
 import { MockStore } from "../store/index";
 
 export interface TreeColumnProps {
@@ -29,6 +29,7 @@ export interface TreeTableProps {
 
     onClick?: (record: TableRecord) => void;
     onDblClick?: (record: TableRecord) => void;
+    getInlineActionButtons?: () => ColumnProps<TableRecord>[];
     onClickOpenRow?: boolean;
 
     showHeader: boolean;
@@ -71,7 +72,8 @@ export class TreeTable extends Component<TreeTableProps> {
             buttonBar,
             clickToSelect,
             onClickOpenRow,
-            hideSelectBoxes
+            hideSelectBoxes,
+            getInlineActionButtons
         } = this.props;
 
         const {
@@ -151,6 +153,12 @@ export class TreeTable extends Component<TreeTableProps> {
             };
         }
 
+        let columns = treeTableColumns;
+        if (getInlineActionButtons) {
+            const extraColumns = getInlineActionButtons();
+            columns = [...treeTableColumns, ...extraColumns];
+        }
+
         return (
             <div
                 className={classNames(
@@ -163,7 +171,7 @@ export class TreeTable extends Component<TreeTableProps> {
                 <Alerts validationMessages={validationMessages} remove={removeValidationMessage} />
                 {buttonBar}
                 <Table
-                    columns={treeTableColumns}
+                    columns={columns}
                     dataSource={rowTree}
                     onRow={onRow}
                     onExpand={this.onExpand}

@@ -14,6 +14,7 @@ interface CommonProps {
 }
 
 export type ClickOptions = "nothing" | "mf" | "nf" | "open";
+export type InlineActionButtonAction = "mf" | "nf" | "open";
 export type DataSource = "xpath" | "mf" | "nf";
 export type ActionButtonAction = "mf" | "nf";
 export type OnChangeAction = "nothing" | "mf" | "nf";
@@ -32,13 +33,25 @@ export interface TreeviewColumnProps {
     columnClassName?: string;
 }
 
-export interface ActionButtonProps {
+export interface SelectActionButtonProps {
     selectABLabel: string;
     selectABClass: string;
     selectABHideOnNotApplicable: boolean;
     selectABAction: ActionButtonAction;
     selectABMicroflow: string;
     selectABNanoflow: Nanoflow;
+}
+
+export interface InlineActionButtonProps {
+    actionButtonClass: string;
+    actionButttonLabel: string;
+    actionButtonColumnLabel: string;
+    actionButtonColumnClass: string;
+    actionButtonOnClickAction: InlineActionButtonAction;
+    actionButtonOnClickMf: string;
+    actionButtonOnClickNf: Nanoflow;
+    actionButtonOnClickForm: string;
+    actionButtonOnClickOpenPageAs: OpenPageAs;
 }
 
 export interface MxTreeTableContainerProps extends CommonProps {
@@ -68,6 +81,7 @@ export interface MxTreeTableContainerProps extends CommonProps {
     columnHeaderMicroflow: string;
     columnHeaderNanoflow: Nanoflow;
     columnMethod: ColumnMethod;
+    inlineActionButtons: InlineActionButtonProps[];
 
     onClickAction: ClickOptions;
     onClickMf: string;
@@ -92,7 +106,7 @@ export interface MxTreeTableContainerProps extends CommonProps {
     selectOnChangeAction: OnChangeAction;
     selectOnChangeMicroflow: string;
     selectOnChangeNanoflow: Nanoflow;
-    selectActionButtons: ActionButtonProps[];
+    selectActionButtons: SelectActionButtonProps[];
 
     stateManagementType: StateManagementType;
     stateLocalStorageTime: number;

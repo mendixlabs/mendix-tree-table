@@ -29,11 +29,12 @@ import {
     MxTreeTableContainerProps,
     Nanoflow,
     TreeviewColumnProps,
-    ActionButtonProps,
-    ClickOptions
+    SelectActionButtonProps,
+    ClickOptions,
+    InlineActionButtonAction
 } from "../typings/MxTreeTableProps";
 import { ExtraMXValidateProps, validateProps } from "./util/validation";
-import { getColumns, TreeColumnProps, TableRecord } from "./util/columns";
+import { getColumns, TreeColumnProps, TableRecord, getInlineActionButtons } from './util/columns';
 import { createCamelcaseId } from "./util";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
@@ -41,6 +42,7 @@ import { TreeTable } from "./components/TreeTable";
 import { TreeRowObject } from "./store/objects/row";
 import { getReferencePart } from "./util/index";
 import { TableState } from "./store/index";
+import { ColumnProps } from "antd/es/table/interface";
 
 export interface Action extends IAction {}
 export type ActionReturn = string | number | boolean | mendix.lib.MxObject | mendix.lib.MxObject[] | void;
@@ -241,6 +243,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             showHeader: uiShowHeader,
             selectMode: selectionMode,
             onSelect: this.onSelect.bind(this),
+            getInlineActionButtons: this._getInlineButtonColumns.bind(this),
             buttonBar,
             clickToSelect: selectClickSelect,
             hideSelectBoxes: selectHideCheckboxes
@@ -466,7 +469,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     // BUTTONS
     // **********************
 
-    private _getButtons(actionButtons: ActionButtonProps[]): ReactNode {
+    private _getButtons(actionButtons: SelectActionButtonProps[]): ReactNode {
         const selectedObjects = this.store.selectedRows;
         const filteredButtons = actionButtons
             .filter(
@@ -513,6 +516,19 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         return createElement(ButtonBar, {
             className: "widget-treetable-buttonbar",
             buttons: filteredButtons
+        });
+    }
+
+    private _getInlineButtonColumns(): Array<ColumnProps<TableRecord>> {
+        return getInlineActionButtons(this.props.inlineActionButtons, (
+            record: TableRecord,
+            action: InlineActionButtonAction,
+            microflow: string,
+            nanoflow: Nanoflow,
+            form: string,
+            formOpenAs: OpenPageAs
+        ): void => {
+            this._onClickHandler(record, action as ClickOptions, microflow, nanoflow, form, formOpenAs);
         });
     }
 

@@ -1,6 +1,8 @@
 import { createCamelcaseId } from ".";
 import { ColumnProps } from "antd/es/table";
-import { TreeviewColumnProps, Nanoflow } from "../../typings/MxTreeTableProps";
+import { TreeviewColumnProps, Nanoflow, InlineActionButtonProps, InlineActionButtonAction } from "../../typings/MxTreeTableProps";
+import { createElement } from 'react';
+import { OpenPageAs } from "@jeltemx/mendix-react-widget-utils";
 
 export interface TreeColumnProps {
     id: string;
@@ -58,3 +60,33 @@ export const getTreeTableColumns = (columns: TreeColumnProps[]): Array<ColumnPro
         return treeColumn;
     });
 };
+
+export const getInlineActionButtons = (buttons: InlineActionButtonProps[], onClickHandler: ((
+    record: TableRecord,
+    action: InlineActionButtonAction,
+    microflow: string,
+    nanoflow: Nanoflow,
+    form: string,
+    formOpenAs: OpenPageAs
+) => void)): Array<ColumnProps<TableRecord>> => {
+    return buttons.map(button => {
+        const treeColumn: ColumnProps<TableRecord> = {
+            className: "buttonColumn",
+            render: (_text: any, record: TableRecord) => {
+                return createElement("button", {
+                    className: button.actionButtonClass,
+                    onClick: () => {
+                        onClickHandler(record, button.actionButtonOnClickAction, button.actionButtonOnClickMf, button.actionButtonOnClickNf, button.actionButtonOnClickForm, button.actionButtonOnClickOpenPageAs);
+                    }
+                }, button.actionButttonLabel);
+            }
+        };
+        if (button.actionButtonColumnLabel) {
+            treeColumn.title = button.actionButtonColumnLabel;
+        }
+        if (button.actionButtonColumnClass) {
+            treeColumn.className = "buttonColumn " + button.actionButtonColumnClass;
+        }
+        return treeColumn;
+    });
+}

@@ -226,11 +226,71 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                     <description>Choose 'Microflow' in 'Definition' and choose a microflow here</description>
                     <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
                 </property>
-                <!-- <property key="columnHeaderNanoflow" type="nanoflow" required="false">
-                    <caption>Nanoflow</caption>
-                    <description>Choose 'Nanoflow' in 'Definition' and choose a nnanoflow here</description>
-                    <returnType type="Object" isList="true" entityProperty="columnHeaderEntity" />
-                </property> -->
+            </propertyGroup>
+            <propertyGroup caption="Inline buttons">
+                <property key="inlineActionButtons" type="object" isList="true" required="false">
+                    <caption>Buttons</caption>
+                    <description>These are inline action buttons that are appended to every row. These will be added at the end of the row as separate columns.</description>
+                    <properties>
+                        <property key="actionButtonClass" type="string" required="false" defaultValue="btn actionButton">
+                            <caption>Button class</caption>
+                            <category>UI</category>
+                            <description>Use this to style your buttons. This could be usefull when you have a button without a label</description>
+                        </property>
+                        <property key="actionButttonLabel" type="string" required="false" defaultValue="">
+                            <caption>Button label</caption>
+                            <category>UI</category>
+                            <description>Use this as a label for your individual button</description>
+                        </property>
+                        <property key="actionButtonColumnLabel" type="string" required="false" defaultValue="">
+                            <caption>Column label</caption>
+                            <category>UI</category>
+                            <description>When you add columns, you can optionally set a label for your column</description>
+                        </property>
+                        <property key="actionButtonColumnClass" type="string" required="false" defaultValue="">
+                            <caption>Column class</caption>
+                            <category>UI</category>
+                            <description>When you add columns, you can optionally set a class for your column</description>
+                        </property>
+                        <property key="actionButtonOnClickAction" type="enumeration" defaultValue="mf">
+                            <caption>Button click action</caption>
+                            <category>Action</category>
+                            <description>Note: For pages it uses the Node object, for microflow/nanoflow the Helper object! Make sure you have configured this.</description>
+                            <enumerationValues>
+                                <enumerationValue key="mf">Microflow</enumerationValue>
+                                <enumerationValue key="nf">Nanoflow</enumerationValue>
+                                <enumerationValue key="open">Open page</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="actionButtonOnClickMf" type="microflow" required="false" entityProperty="../helperEntity">
+                            <caption>Button click Microflow</caption>
+                            <category>Action</category>
+                            <description></description>
+                            <returnType type="Void" />
+                        </property>
+                        <property key="actionButtonOnClickNf" type="nanoflow" required="false" entityProperty="../helperEntity">
+                            <caption>Button click Nanoflow</caption>
+                            <category>Action</category>
+                            <description></description>
+                            <returnType type="Void" />
+                        </property>
+                        <property key="actionButtonOnClickForm" type="form" required="false">
+                            <caption>Button click page</caption>
+                            <category>Action</category>
+                            <description>The page to open when a row is clicked</description>
+                        </property>
+                        <property key="actionButtonOnClickOpenPageAs" type="enumeration" defaultValue="content">
+                            <caption>Button click open page as</caption>
+                            <category>Action</category>
+                            <description/>
+                            <enumerationValues>
+                                <enumerationValue key="content">Full page</enumerationValue>
+                                <enumerationValue key="popup">Popup</enumerationValue>
+                                <enumerationValue key="modal">Blocking popup</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                    </properties>
+                </property>
             </propertyGroup>
         </propertyGroup>
 
