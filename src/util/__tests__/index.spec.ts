@@ -15,8 +15,12 @@ describe("Utils", () => {
     it("should create the right references", () => {
         const ref = getReferencePart("11111/22222");
         const entity = getReferencePart("11111/22222", "entity");
+        const empty = getReferencePart("");
+        const emptyEntity = getReferencePart("", "entity");
 
         expect(ref).toEqual("11111");
         expect(entity).toEqual("22222");
+        expect(empty).toEqual("");
+        expect(emptyEntity).toEqual("");
     });
 })
