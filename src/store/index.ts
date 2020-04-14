@@ -24,7 +24,6 @@ export interface MockStore {
     rowTree: TreeRowObject[];
     setSelected: (keys?: string[]) => void;
     setExpanded: (keys?: string[]) => void;
-    lastLoadFromContext: number | null;
     selectedRows: string[];
     expandedKeys: string[];
     treeTableColumns: Array<ColumnProps<TableRecord>>;
@@ -75,7 +74,6 @@ export class NodeStore {
     @observable public columns: TreeColumnProps[] = [];
     @observable public rowObjects: RowObject[] = [];
     @observable public validColumns = true;
-    @observable public lastLoadFromContext: number | null = null;
     @observable public subscriptionHandles: number[] = [];
 
     @observable public selectFirstOnSingle = false;
@@ -190,11 +188,6 @@ export class NodeStore {
     @action
     setSelectFirstOnSingle(state: boolean): void {
         this.selectFirstOnSingle = state;
-    }
-
-    @action
-    setLastLoadFromContext(): void {
-        this.lastLoadFromContext = +new Date();
     }
 
     @action

@@ -27,8 +27,8 @@ export interface TableRecord {
     [other: string]: any;
 }
 
-export const getColumns = (columns: TreeviewColumnProps[], isStatic = true): TreeColumnProps[] => {
-    if (!isStatic) {
+export const getColumns = (columns?: TreeviewColumnProps[], isStatic = true): TreeColumnProps[] => {
+    if (!isStatic || !columns) {
         return [];
     }
     const newColumns = columns.map(column => {

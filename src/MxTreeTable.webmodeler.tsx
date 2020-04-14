@@ -50,7 +50,6 @@ export class preview extends Component<MxTreeTableContainerProps> {
             rowTree: [],
             expandedKeys: [],
             isLoading: false,
-            lastLoadFromContext: null,
             selectedRows: [],
             removeValidationMessage: (_id: string): void => {
                 console.log("noop", _id);
