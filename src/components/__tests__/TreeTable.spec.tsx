@@ -4,7 +4,25 @@ import { shallow, ShallowWrapper, ReactWrapper, mount } from "enzyme";
 import { TreeTable, TreeTableProps } from "../TreeTable";
 import { TreeRowObject } from "../../store/objects/row";
 import { MockStore } from "../../store/index";
-import { getTreeTableColumns, TreeColumnProps } from "../../util/columns";
+import { getTreeTableColumns, TreeColumnProps, getColumns } from "../../util/columns";
+import { TreeviewColumnProps } from "../../../typings/MxTreeTableProps";
+
+const treeviewColumns: TreeviewColumnProps[] = [
+    {
+        columnAttr: "Title",
+        columnClassName: "mx-first-column",
+        columnHeader: "Title",
+        columnWidth: "",
+        transformNanoflow: { nanoflow: [], paramsSpec: { Progress: "" } }
+    },
+    {
+        columnAttr: "Title",
+        columnClassName: "",
+        columnHeader: "Title",
+        columnWidth: "100",
+        transformNanoflow: { nanoflow: [], paramsSpec: { Progress: "" } }
+    }
+]
 
 const columns = (): TreeColumnProps[] => {
     return [
@@ -39,7 +57,7 @@ const rows = (): any[] => {
             _className: "row-class-awesome",
             children: [
                 { key: "0002", id: "002", title: "lvl1", text: "HASTEXT", _parent: "0001" },
-                { key: "0003", id: "003", title: "lvl1", text: "HASTEXT", _parent: "0001" },
+                { key: "0003", id: "003", title: "lvl1", text: "HASTEXT", _parent: "0001" }
             ]
         },
         { key: "0004", id: "004", title: "lvl0", text: "HASTEXT", _icon: "test" }
@@ -68,7 +86,8 @@ const getTableProps = (rows?: TreeRowObject[], columns?: TreeColumnProps[]): Tre
         store,
         showHeader: true,
         selectMode: "none",
-        clickToSelect: false
+        clickToSelect: false,
+        getInlineActionButtons: () => []
     };
 };
 
@@ -196,5 +215,15 @@ describe("TreeTable", () => {
         await wait(500);
 
         expect(tableProps.onDblClick).toHaveBeenCalled();
+    });
+
+    it("getColumns tools should return correct columns", async () => {
+        const empty = getColumns([]);
+        const double = getColumns(treeviewColumns);
+        const dynamic = getColumns(treeviewColumns, false);
+
+        expect(empty).toHaveLength(0);
+        expect(double).toHaveLength(2);
+        expect(dynamic).toHaveLength(0);
     });
 });

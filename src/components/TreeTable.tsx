@@ -55,7 +55,7 @@ export class TreeTable extends Component<TreeTableProps> {
         this.onExpand = this.onExpand.bind(this);
         this.setSelected = this.setSelected.bind(this);
         // this.expandAll = this.expandAll.bind(this);
-        this.collapseAll = this.collapseAll.bind(this);
+        // this.collapseAll = this.collapseAll.bind(this);
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.rowClassName = this.rowClassName.bind(this);
     }
@@ -204,9 +204,9 @@ export class TreeTable extends Component<TreeTableProps> {
     //     });
     // }
 
-    private collapseAll(): void {
-        this.props.store.setExpanded([]);
-    }
+    // private collapseAll(): void {
+    //     this.props.store.setExpanded([]);
+    // }
 
     private onRowClick(record: TableRecord): void {
         if (this.props.onClick) {
