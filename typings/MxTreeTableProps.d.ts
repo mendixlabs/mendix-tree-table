@@ -22,6 +22,7 @@ export type SelectionMode = "none" | "single" | "multi";
 export type ColumnMethod = "static" | "microflow";
 export type LoadScenario = "partial" | "all";
 export type StateManagementType = "disabled" | "localStorage" /*| "mendix"*/;
+export type StateManagementStorage = "session" | "local";
 
 export interface TreeviewColumnProps {
     columnHeader: string;
@@ -95,6 +96,7 @@ export interface MxTreeTableContainerProps extends CommonProps {
 
     stateManagementType: StateManagementType;
     stateLocalStorageTime: number;
+    stateLocalStorageType: StateManagementStorage;
     stateLocalStorageKey: string;
     stateExecuteSelectActionOnRestore: boolean;
     // stateEntity: string;

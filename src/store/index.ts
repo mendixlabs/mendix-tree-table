@@ -203,6 +203,7 @@ export class NodeStore {
         const currentRows: RowObject[] = level === -1 ? [] : [...this.rowObjects];
         let initialState: TableState = { context: this.contextObject?.getGuid() || null, expanded: [], selected: [] };
 
+        const objectGuids = mxObjects.map(obj => obj.getGuid());
         const treeMapping: { [key: string]: string } = {};
         const rootObjectGuids: string[] = [];
 
@@ -230,7 +231,14 @@ export class NodeStore {
         if (this.resetState && this.contextObject) {
             // Reset state if applicable
             this.debug("store: setRowObjects get state: ", this.contextObject.getGuid());
-            initialState = this.getInitialTableState(this.contextObject.getGuid());
+            const initialTablesState = this.getInitialTableState(this.contextObject.getGuid());
+
+            // We need to filter out any that are not in the initial state
+            initialState = {
+                context: initialTablesState.context,
+                selected: initialTablesState.selected.filter(s => objectGuids.indexOf(s) !== -1),
+                expanded: initialTablesState.expanded.filter(s => objectGuids.indexOf(s) !== -1)
+            };
         }
 
         if (initialState.selected.length === 0 && this.selectFirstOnSingle) {

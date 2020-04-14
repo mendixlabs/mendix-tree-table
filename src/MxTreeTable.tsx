@@ -2,7 +2,7 @@ import { Component, ReactNode, createElement } from "react";
 import { hot } from "react-hot-loader/root";
 import { findDOMNode } from "react-dom";
 import { observer } from "mobx-react";
-import { get as getLocalStorage, set as setLocalStorage } from "local-storage";
+import store from "store2";
 
 // import * as ls from "local-storage";
 // // @ts-ignore;
@@ -736,7 +736,12 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     // **********************
 
     private _getInitialState(guid: string): TableState {
-        const { stateManagementType, stateLocalStorageKey, stateExecuteSelectActionOnRestore } = this.props;
+        const {
+            stateManagementType,
+            stateLocalStorageKey,
+            stateExecuteSelectActionOnRestore,
+            stateLocalStorageType
+        } = this.props;
         const key = stateLocalStorageKey !== "" ? `TreeTableState-${stateLocalStorageKey}` : `TreeTableState-${guid}`;
         const currentDateTime = +new Date();
         const emptyState: TableState = {
@@ -747,10 +752,19 @@ Your context object is of type "${contextEntity}". Please check the configuratio
         if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
             return emptyState;
         }
-        const localStoredState = getLocalStorage<TableState>(key) as TableState | null;
+        const hasLocalStorage = stateLocalStorageType === "session" ? store.session.has(key) : store.local.has(key);
+
+        if (!hasLocalStorage) {
+            this.writeTableState(emptyState);
+            return emptyState;
+        }
+
+        const localStoredState = (stateLocalStorageType === "session"
+            ? store.session.get(key)
+            : store.local.get(key)) as TableState | null;
         this.debug("getTableState", localStoredState);
         if (
-            localStoredState !== null &&
+            localStoredState &&
             localStoredState.lastUpdate &&
             currentDateTime - localStoredState.lastUpdate < this.props.stateLocalStorageTime * 1000 * 60
         ) {
@@ -769,7 +783,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     }
 
     private _writeTableState(state: TableState): void {
-        const { stateManagementType, stateLocalStorageKey } = this.props;
+        const { stateManagementType, stateLocalStorageKey, stateLocalStorageType } = this.props;
         if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
             return;
         }
@@ -777,7 +791,11 @@ Your context object is of type "${contextEntity}". Please check the configuratio
         const key =
             stateLocalStorageKey !== "" ? `TreeTableState-${stateLocalStorageKey}` : `TreeTableState-${state.context}`;
         state.lastUpdate = +new Date();
-        setLocalStorage(key, state);
+        if (stateLocalStorageType === "session") {
+            store.session.set(key, state);
+        } else {
+            store.local.set(key, state);
+        }
     }
 
     // **********************

@@ -446,20 +446,28 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                     <description>
 Note: State management (currently) ONLY works when you load a whole tree (see Data section). In case of 'Top level', it will be disabled.
 
-- If you use Local Storage, it will save the state in your browser, so you won't have to save anything on the server.
+- If you use Browser, it will save the state in your browser, so you won't have to save anything on the server.
 - If you use Mendix, you will need to set up the 'Use Mendix' section at the bottom.
                     </description>
                     <enumerationValues>
                          <enumerationValue key="disabled">Disabled</enumerationValue>
-                         <enumerationValue key="localStorage">Local Storage (browser)</enumerationValue>
+                         <enumerationValue key="localStorage">Browser</enumerationValue>
                          <!-- <enumerationValue key="mendix">Mendix (server) NOT WORKING YET!!</enumerationValue> -->
                     </enumerationValues>
                 </property>
             </propertyGroup>
-            <propertyGroup caption="Local Storage">
+            <propertyGroup caption="Browser">
+                <property key="stateLocalStorageType" type="enumeration" defaultValue="session">
+                    <caption>Storage type</caption>
+                    <description>If you use session (default), it will only apply to current session. If you use local storage, it will stay in the browser as local storage, persisting over multiple sessions. This does mean the local storage can get polluted with a lot of states.</description>
+                    <enumerationValues>
+                         <enumerationValue key="session">Session</enumerationValue>
+                         <enumerationValue key="local">Local Storage</enumerationValue>
+                    </enumerationValues>
+                </property>
                 <property key="stateLocalStorageTime" type="integer" required="true" defaultValue="60">
                     <caption>Timeout</caption>
-                    <description>Local Storage Timeout for State Management is set in MINUTES. When the state is older, it will be ignored</description>
+                    <description>Storage Timeout for State Management is set in MINUTES. When the state is older, it will be ignored</description>
                 </property>
                 <property key="stateLocalStorageKey" type="string" required="false" defaultValue="">
                     <caption>Key</caption>

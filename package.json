@@ -60,10 +60,10 @@
     "classnames": "^2.2.6",
     "core-js": "^3.6.4",
     "debounce": "^1.2.0",
-    "local-storage": "^2.0.0",
     "mobx": "^4.15.2",
     "mobx-react": "^6.1.5",
     "promise-queue": "^2.2.5",
-    "react-mustache-template-component": "^1.0.0"
+    "react-mustache-template-component": "^1.0.0",
+    "store2": "^2.11.0"
   }
 }
