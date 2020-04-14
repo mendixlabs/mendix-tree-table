@@ -209,7 +209,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             selectHideCheckboxes,
             selectOnChangeAction
         } = this.props;
-        const { validationMessages, removeValidationMessage, selectFirstOnSingle } = this.store;
+        const { validationMessages, removeValidationMessage } = this.store;
         const fatalValidations = validationMessages.filter(m => m.fatal);
 
         const buttonBar = this.getButtons(selectActionButtons);
@@ -243,8 +243,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             onSelect: this.onSelect.bind(this),
             buttonBar,
             clickToSelect: selectClickSelect,
-            hideSelectBoxes: selectHideCheckboxes,
-            selectFirst: selectFirstOnSingle
+            hideSelectBoxes: selectHideCheckboxes
         });
     }
 

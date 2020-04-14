@@ -75,10 +75,10 @@ export class NodeStore {
     @observable public columns: TreeColumnProps[] = [];
     @observable public rowObjects: RowObject[] = [];
     @observable public validColumns = true;
-    @observable public selectFirstOnSingle = false;
     @observable public lastLoadFromContext: number | null = null;
     @observable public subscriptionHandles: number[] = [];
 
+    @observable public selectFirstOnSingle = false;
     @observable public calculateInitialParents = false;
     @observable public resetState = false;
 
@@ -91,6 +91,8 @@ export class NodeStore {
 
     private needToCalculateInitialParents: boolean;
     private needToRestoreStateOnContextChange: boolean;
+    private needToRestoreSelectFirst: boolean;
+
     private reset: () => void;
     private resetColumns: (col: string) => void;
 
@@ -116,6 +118,7 @@ export class NodeStore {
         this.columns = columns;
         this.validColumns = validColumns;
         this.selectFirstOnSingle = selectFirstOnSingle;
+        this.needToRestoreSelectFirst = selectFirstOnSingle;
         this.calculateInitialParents = calculateInitialParents;
         this.needToCalculateInitialParents = calculateInitialParents;
         this.validationMessages = validationMessages;
@@ -139,17 +142,15 @@ export class NodeStore {
     @action
     setContext(obj?: mendix.lib.MxObject): void {
         this.debug("Store: setContext", obj);
-        if (
-            this.contextObject !== null &&
-            obj &&
-            this.contextObject.getGuid() !== obj.getGuid() &&
-            this.needToCalculateInitialParents
-        ) {
+        if (this.contextObject !== null && obj && this.contextObject.getGuid() !== obj.getGuid()) {
             if (this.needToCalculateInitialParents) {
                 this.calculateInitialParents = true;
+                if (this.needToRestoreStateOnContextChange) {
+                    this.resetState = true;
+                }
             }
-            if (this.needToRestoreStateOnContextChange) {
-                this.resetState = true;
+            if (this.needToRestoreSelectFirst) {
+                this.selectFirstOnSingle = true;
             }
         }
         this.contextObject = obj || null;
@@ -205,6 +206,8 @@ export class NodeStore {
         const treeMapping: { [key: string]: string } = {};
         const rootObjectGuids: string[] = [];
 
+        // Calculate parents when loading a whole tree;
+
         if (
             this.calculateInitialParents &&
             this.rowObjectMxProperties.nodeChildReference &&
@@ -225,8 +228,19 @@ export class NodeStore {
         }
 
         if (this.resetState && this.contextObject) {
+            // Reset state if applicable
             this.debug("store: setRowObjects get state: ", this.contextObject.getGuid());
             initialState = this.getInitialTableState(this.contextObject.getGuid());
+        }
+
+        if (initialState.selected.length === 0 && this.selectFirstOnSingle) {
+            if (rootObjectGuids.length > 0) {
+                initialState.selected = [rootObjectGuids[0]];
+                this.onSelect(initialState.selected);
+            } else if (mxObjects.length > 0 && level === -1) {
+                initialState.selected = [mxObjects[0].getGuid()];
+                this.onSelect(initialState.selected);
+            }
         }
 
         mxObjects.forEach(mxObject => {
@@ -274,6 +288,9 @@ export class NodeStore {
         }
         if (this.resetState) {
             this.disableResetState();
+        }
+        if (this.selectFirstOnSingle) {
+            this.setSelectFirstOnSingle(false);
         }
     }
 

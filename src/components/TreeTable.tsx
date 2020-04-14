@@ -37,33 +37,18 @@ export interface TreeTableProps {
     onSelect?: (ids: string[]) => void;
     buttonBar?: ReactNode;
     hideSelectBoxes?: boolean;
-    selectFirst?: boolean;
 }
 
 export type PageLocation = "content" | "popup" | "modal";
 
 const DEBOUNCE = 250;
 
-interface TreeTableState {
-    lastLoadFromContext: number | null;
-}
-
 @observer
-export class TreeTable extends Component<TreeTableProps, TreeTableState> {
+export class TreeTable extends Component<TreeTableProps> {
     debounce: number | null;
 
     constructor(props: TreeTableProps) {
         super(props);
-
-        const rows = props.store.rowTree;
-
-        if (props.selectFirst && props.selectMode === "single" && rows.length > 0) {
-            props.store.setSelected([rows[0].key]);
-        }
-
-        this.state = {
-            lastLoadFromContext: props.store.lastLoadFromContext
-        };
 
         this.debounce = null;
         this.onRowClick = this.onRowClick.bind(this);
@@ -194,13 +179,9 @@ export class TreeTable extends Component<TreeTableProps, TreeTableState> {
         );
     }
 
-    componentWillReceiveProps(newProps: TreeTableProps): void {
-        if (newProps.store.lastLoadFromContext !== this.state.lastLoadFromContext) {
-            this.setState({
-                lastLoadFromContext: newProps.store.lastLoadFromContext
-            });
-        }
-    }
+    // componentWillReceiveProps(newProps: TreeTableProps): void {
+
+    // }
 
     private setSelected(keys: string[]): void {
         this.onSelectionChange(keys);
