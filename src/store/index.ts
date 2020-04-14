@@ -21,7 +21,7 @@ export interface TableState {
 }
 
 export interface MockStore {
-    rowTree: TreeRowObject[];
+    rowTree: Tree<TreeRowObject[]>;
     setSelected: (keys?: string[]) => void;
     setExpanded: (keys?: string[]) => void;
     selectedRows: string[];
