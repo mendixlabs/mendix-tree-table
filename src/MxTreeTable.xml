@@ -453,8 +453,8 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
 
             <propertyGroup caption="Selection UI">
                 <property key="selectActionButtons" type="object" isList="true" required="false">
-                    <caption>Buttons</caption>
-                    <description>Buttons that can be triggered when you have selected something. If no buttons are configured, Select Mode will be ignored.</description>
+                    <caption>Button bar</caption>
+                    <description>Buttons that can be triggered when you have selected something. If no buttons are configured, Select Mode will be ignored. This is a button bar that will appear on top of the table.</description>
                     <properties>
                         <propertyGroup caption="Button UI">
                             <property key="selectABLabel" type="string" required="true" defaultValue="">

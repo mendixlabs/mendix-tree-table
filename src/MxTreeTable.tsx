@@ -34,7 +34,7 @@ import {
     InlineActionButtonAction
 } from "../typings/MxTreeTableProps";
 import { ExtraMXValidateProps, validateProps } from "./util/validation";
-import { getColumns, TreeColumnProps, TableRecord, getInlineActionButtons } from './util/columns';
+import { getColumns, TreeColumnProps, TableRecord, getInlineActionButtons } from "./util/columns";
 import { createCamelcaseId } from "./util";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
@@ -520,16 +520,19 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     }
 
     private _getInlineButtonColumns(): Array<ColumnProps<TableRecord>> {
-        return getInlineActionButtons(this.props.inlineActionButtons, (
-            record: TableRecord,
-            action: InlineActionButtonAction,
-            microflow: string,
-            nanoflow: Nanoflow,
-            form: string,
-            formOpenAs: OpenPageAs
-        ): void => {
-            this._onClickHandler(record, action as ClickOptions, microflow, nanoflow, form, formOpenAs);
-        });
+        return getInlineActionButtons(
+            this.props.inlineActionButtons,
+            (
+                record: TableRecord,
+                action: InlineActionButtonAction,
+                microflow: string,
+                nanoflow: Nanoflow,
+                form: string,
+                formOpenAs: OpenPageAs
+            ): void => {
+                this._onClickHandler(record, action as ClickOptions, microflow, nanoflow, form, formOpenAs);
+            }
+        );
     }
 
     // **********************

@@ -174,24 +174,18 @@ export const validateProps = (
         props.inlineActionButtons.forEach(button => {
             if (button.actionButtonOnClickAction === "mf" && !button.actionButtonOnClickMf) {
                 messages.push(
-                    new ValidationMessage(
-                        `Column -> Inline Buttons -> Button should have a microflow configured`
-                    )
+                    new ValidationMessage("Column -> Inline Buttons -> Button should have a microflow configured")
                 );
             } else if (button.actionButtonOnClickAction === "nf" && !button.actionButtonOnClickNf.nanoflow) {
                 messages.push(
-                    new ValidationMessage(
-                        `Column -> Inline Buttons -> Button should have a nanoflow configured`
-                    )
+                    new ValidationMessage("Column -> Inline Buttons -> Button should have a nanoflow configured")
                 );
             } else if (button.actionButtonOnClickAction === "open" && !button.actionButtonOnClickForm) {
                 messages.push(
-                    new ValidationMessage(
-                        `Column -> Inline Buttons -> Button should have a page configured`
-                    )
+                    new ValidationMessage("Column -> Inline Buttons -> Button should have a page configured")
                 );
             }
-        })
+        });
     }
 
     return messages;

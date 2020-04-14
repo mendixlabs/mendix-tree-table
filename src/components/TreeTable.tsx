@@ -9,7 +9,7 @@ import "../ui/MxTreeTable.scss";
 import { Alerts } from "./Alert";
 import { SelectionMode } from "../../typings/MxTreeTableProps";
 import { NodeStore } from "../store";
-import { TableRecord } from '../util/columns';
+import { TableRecord } from "../util/columns";
 import { MockStore } from "../store/index";
 
 export interface TreeColumnProps {
@@ -29,7 +29,7 @@ export interface TreeTableProps {
 
     onClick?: (record: TableRecord) => void;
     onDblClick?: (record: TableRecord) => void;
-    getInlineActionButtons?: () => ColumnProps<TableRecord>[];
+    getInlineActionButtons?: () => Array<ColumnProps<TableRecord>>;
     onClickOpenRow?: boolean;
 
     showHeader: boolean;
@@ -39,8 +39,6 @@ export interface TreeTableProps {
     buttonBar?: ReactNode;
     hideSelectBoxes?: boolean;
 }
-
-export type PageLocation = "content" | "popup" | "modal";
 
 const DEBOUNCE = 250;
 
@@ -186,10 +184,6 @@ export class TreeTable extends Component<TreeTableProps> {
             </div>
         );
     }
-
-    // componentWillReceiveProps(newProps: TreeTableProps): void {
-
-    // }
 
     private setSelected(keys: string[]): void {
         this.onSelectionChange(keys);
