@@ -56,6 +56,7 @@ export interface NodeStoreConstructorOptions {
     convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     getInitialTableState: (guid: string) => TableState;
     writeTableState: (state: TableState) => void;
+    onSelect: (ids: string[]) => void;
     resetColumns: (col: string) => void;
     reset: () => void;
     debug: (...args: unknown[]) => void;
@@ -85,8 +86,8 @@ export class NodeStore {
     private childLoader: (guids: string[], parentKey: string) => Promise<void>;
     private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     private getInitialTableState: (guid: string) => TableState;
-    // @ts-ignore
     private writeTableState: (state: TableState) => void;
+    private onSelect: (ids: string[]) => void;
 
     private needToCalculateInitialParents: boolean;
     private needToRestoreStateOnContextChange: boolean;
@@ -104,6 +105,7 @@ export class NodeStore {
         rowObjectMxProperties,
         validationMessages,
         getInitialTableState,
+        onSelect,
         writeTableState,
         resetState,
         resetColumns,
@@ -125,6 +127,7 @@ export class NodeStore {
         this.childLoader = childLoader;
         this.convertMxObjectToRow = convertMxObjectToRow;
         this.resetColumns = resetColumns;
+        this.onSelect = onSelect;
         this.reset = reset;
         this.debug = debug || ((): void => {});
     }
@@ -222,8 +225,8 @@ export class NodeStore {
         }
 
         if (this.resetState && this.contextObject) {
+            this.debug("store: setRowObjects get state: ", this.contextObject.getGuid());
             initialState = this.getInitialTableState(this.contextObject.getGuid());
-            console.log(initialState);
         }
 
         mxObjects.forEach(mxObject => {
@@ -486,6 +489,7 @@ export class NodeStore {
             const parents = this.findParents(object);
             this.setSelected([object.key]);
             this.setExpanded(parents.map(p => p.key));
+            this.onSelect([object.key]);
         }
     }
 
@@ -508,7 +512,6 @@ export class NodeStore {
         return async (guid: string, removedCB: (removed: boolean) => void): Promise<void> => {
             this.debug("store: rowChangeHandler", guid);
             const object = await getObject(guid);
-            console.log(object, object?.getReferences(this.rowObjectMxProperties.nodeChildReference));
             if (object) {
                 const found = this.rowObjects.find(entry => entry._obj.getGuid() === object.getGuid());
                 if (found) {

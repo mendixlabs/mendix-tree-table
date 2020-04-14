@@ -3,6 +3,11 @@ import { hot } from "react-hot-loader/root";
 import { findDOMNode } from "react-dom";
 import { observer } from "mobx-react";
 import { get as getLocalStorage, set as setLocalStorage } from "local-storage";
+
+// import * as ls from "local-storage";
+// // @ts-ignore;
+// window.ls = ls;
+
 import {
     IAction,
     getObjectContextFromObjects,
@@ -133,6 +138,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             resetColumns: this.resetColumns,
             getInitialTableState: this.getInitialState,
             writeTableState: this.writeTableState,
+            onSelect: this.onSelectAction.bind(this),
             // TODO make this a check if you can reset state!
             resetState: true,
             reset: this.reset,
@@ -694,8 +700,9 @@ Your context object is of type "${contextEntity}". Please check the configuratio
         }
     }
 
-    private async onSelectAction(): Promise<void> {
-        const { selectedRows } = this.store;
+    private async onSelectAction(selected?: string[]): Promise<void> {
+        const selectedFromStore = this.store.selectedRows;
+        const selectedRows = typeof selected !== "undefined" ? selected : selectedFromStore;
         const { selectOnChangeAction, selectOnChangeMicroflow, selectOnChangeNanoflow } = this.props;
         this.debug("onSelectAction", selectedRows.length);
 
@@ -714,7 +721,7 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             this.store.clearSubscriptions();
             await this.selectionAction(selectedObjects, selectOnChangeMicroflow, null);
             this.store.resetSubscriptions("onSelectAction mf");
-        } else if (selectOnChangeAction === "nf" && selectOnChangeNanoflow) {
+        } else if (selectOnChangeAction === "nf" && selectOnChangeNanoflow && selectOnChangeNanoflow.nanoflow) {
             const selectedObjects = await getObjects(selectedRows);
             if (selectedObjects === null) {
                 return;
@@ -730,8 +737,8 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     // **********************
 
     private _getInitialState(guid: string): TableState {
-        const { stateManagementType } = this.props;
-        const key = `TreeTableState-${guid}`;
+        const { stateManagementType, stateLocalStorageKey, stateExecuteSelectActionOnRestore } = this.props;
+        const key = stateLocalStorageKey !== "" ? `TreeTableState-${stateLocalStorageKey}` : `TreeTableState-${guid}`;
         const currentDateTime = +new Date();
         const emptyState: TableState = {
             context: guid,
@@ -748,6 +755,13 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             localStoredState.lastUpdate &&
             currentDateTime - localStoredState.lastUpdate < this.props.stateLocalStorageTime * 1000 * 60
         ) {
+            if (
+                localStoredState.selected &&
+                localStoredState.selected.length > 0 &&
+                stateExecuteSelectActionOnRestore
+            ) {
+                this.onSelectAction(localStoredState.selected);
+            }
             return localStoredState;
         }
 
@@ -756,12 +770,13 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     }
 
     private _writeTableState(state: TableState): void {
-        const { stateManagementType } = this.props;
+        const { stateManagementType, stateLocalStorageKey } = this.props;
         if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
             return;
         }
         this.debug("writeTableState", state);
-        const key = `TreeTableState-${state.context}`;
+        const key =
+            stateLocalStorageKey !== "" ? `TreeTableState-${stateLocalStorageKey}` : `TreeTableState-${state.context}`;
         state.lastUpdate = +new Date();
         setLocalStorage(key, state);
     }

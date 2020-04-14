@@ -95,6 +95,8 @@ export interface MxTreeTableContainerProps extends CommonProps {
 
     stateManagementType: StateManagementType;
     stateLocalStorageTime: number;
+    stateLocalStorageKey: string;
+    stateExecuteSelectActionOnRestore: boolean;
     // stateEntity: string;
     // getStateObjectMicroflow: string;
     // stateNodeSelectionReference: string;
