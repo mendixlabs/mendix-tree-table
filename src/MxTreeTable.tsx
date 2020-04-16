@@ -39,7 +39,7 @@ import { createCamelcaseId } from "./util";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
-import { TreeRowObject } from './store/objects/row';
+import { TreeRowObject } from "./store/objects/row";
 import { getReferencePart } from "./util/index";
 import { TableState } from "./store/index";
 import { ColumnProps } from "antd/es/table/interface";
