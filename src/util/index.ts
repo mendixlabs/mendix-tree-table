@@ -1,4 +1,3 @@
-// @ts-ignore
 import { camel } from "@thi.ng/strings";
 
 export const createCamelcaseId = (str: string): string => {
