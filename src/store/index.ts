@@ -51,7 +51,7 @@ export interface NodeStoreConstructorOptions {
     resetState: boolean;
     rowObjectMxProperties: RowObjectMxProperties;
 
-    childLoader: (guids: string[], parentKey: string) => Promise<void>;
+    childLoader: (guids: string[], parentKey: string, loadFromRef: boolean) => Promise<void>;
     convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     getInitialTableState: (guid: string) => TableState;
     writeTableState: (state: TableState) => void;
@@ -81,7 +81,7 @@ export class NodeStore {
     @observable public resetState = false;
 
     private rowObjectMxProperties: RowObjectMxProperties;
-    private childLoader: (guids: string[], parentKey: string) => Promise<void>;
+    private childLoader: (guids: string[], parentKey: string, loadFromRef: boolean) => Promise<void>;
     private convertMxObjectToRow: (mxObject: mendix.lib.MxObject, parentKey?: string | null) => Promise<TreeRowObject>;
     private getInitialTableState: (guid: string) => TableState;
     private writeTableState: (state: TableState) => void;
@@ -276,7 +276,7 @@ export class NodeStore {
                     const hasRows = currentRows.filter(row => row._parent && row._parent === rowObj.key).length > 0;
                     if (hasRows && unFoundRows.length > 0) {
                         // Node has children, but some references that have not been loaded yet. Load them all;
-                        this.childLoader(unFoundRows, rowObj.key);
+                        this.childLoader(unFoundRows, rowObj.key, true);
                     }
                 }
                 rowObj.resetSubscription();
@@ -541,11 +541,13 @@ export class NodeStore {
                             object.getReferences(this.rowObjectMxProperties.nodeChildReference)) ||
                         [];
                     const unfound = objRef.filter(r => this.findRowObject(r) === null);
-                    // const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
+                    const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
 
                     if (unfound.length > 0) {
                         // Node has children, but some references that have not been loaded yet. Load them all;
-                        this.childLoader(unfound, found.key);
+                        this.childLoader(unfound, found.key, true);
+                    } else if (hasRows) {
+                        this.childLoader([], found.key, false);
                     }
 
                     if (removedCB) {

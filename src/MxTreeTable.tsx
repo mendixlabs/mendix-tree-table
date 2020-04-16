@@ -39,7 +39,7 @@ import { createCamelcaseId } from "./util";
 import { ButtonBarButtonProps, ButtonBar } from "./components/ButtonBar";
 import { Alerts } from "./components/Alert";
 import { TreeTable } from "./components/TreeTable";
-import { TreeRowObject } from "./store/objects/row";
+import { TreeRowObject } from './store/objects/row';
 import { getReferencePart } from "./util/index";
 import { TableState } from "./store/index";
 import { ColumnProps } from "antd/es/table/interface";
@@ -369,12 +369,20 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         }
     }
 
-    private async _loadChildData(guids: string[], parentKey: string): Promise<void> {
-        this.debug("loadChildData", guids, parentKey);
+    private async _loadChildData(guids: string[], parentKey: string, loadFromRef: boolean): Promise<void> {
+        this.debug("loadChildData", guids, parentKey, loadFromRef);
         try {
-            const objects = await getObjects(guids);
-            if (objects) {
-                this.handleData(objects, parentKey);
+            if (loadFromRef) {
+                const objects = await getObjects(guids);
+                if (objects) {
+                    this.handleData(objects, parentKey);
+                }
+            } else {
+                const rowObject = this.store.findRowObject(parentKey);
+                if (rowObject) {
+                    const treeObj = rowObject.treeObject;
+                    this._expanderFunction(treeObj, 1);
+                }
             }
         } catch (error) {
             console.log(error);
