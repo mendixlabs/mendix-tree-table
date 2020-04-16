@@ -5,10 +5,12 @@ describe("Utils", () => {
         const camel1 = createCamelcaseId("TestingAll");
         const camel2 = createCamelcaseId("id");
         const camel3 = createCamelcaseId("key");
+        const camel4 = createCamelcaseId("children");
 
         expect(camel1).toEqual("testingall");
         expect(camel2).toEqual("idId");
         expect(camel3).toEqual("keyId");
+        expect(camel4).toEqual("childrenId");
     });
 
     it("should create the right references", () => {

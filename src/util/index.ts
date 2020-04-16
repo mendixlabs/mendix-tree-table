@@ -2,11 +2,9 @@ import { camel } from "@thi.ng/strings";
 
 export const createCamelcaseId = (str: string): string => {
     const camelCased = camel(str);
-    if ("id" === camelCased) {
-        return "idId";
-    }
-    if ("key" === camelCased) {
-        return "keyId";
+    const reserved = ["id", "key", "children"];
+    if (reserved.indexOf(camelCased) !== -1) {
+        return `${camelCased}Id`
     }
     return camelCased;
 };
