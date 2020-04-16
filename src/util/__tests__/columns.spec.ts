@@ -16,7 +16,7 @@ const treeviewColumns: TreeviewColumnProps[] = [
         columnWidth: "100",
         transformNanoflow: { nanoflow: [], paramsSpec: { Progress: "" } }
     }
-]
+];
 
 describe("Columns", () => {
     it("getColumns tools should return correct columns", async () => {
@@ -28,4 +28,4 @@ describe("Columns", () => {
         expect(double).toHaveLength(2);
         expect(dynamic).toHaveLength(0);
     });
-})
+});

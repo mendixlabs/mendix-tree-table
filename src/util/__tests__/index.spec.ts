@@ -9,7 +9,6 @@ describe("Utils", () => {
         expect(camel1).toEqual("testingall");
         expect(camel2).toEqual("idId");
         expect(camel3).toEqual("keyId");
-
     });
 
     it("should create the right references", () => {
@@ -23,4 +22,4 @@ describe("Utils", () => {
         expect(empty).toEqual("");
         expect(emptyEntity).toEqual("");
     });
-})
+});
