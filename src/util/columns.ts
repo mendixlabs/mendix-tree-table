@@ -31,8 +31,8 @@ export const getColumns = (columns?: TreeviewColumnProps[], isStatic = true): Tr
     if (!isStatic || !columns) {
         return [];
     }
-    const newColumns = columns.map(column => {
-        const id = createCamelcaseId(column.columnAttr);
+    const newColumns = columns.map((column, index) => {
+        const id = createCamelcaseId(column.columnAttr !== "" ? column.columnAttr : `column-${index}`);
         const tableColumn: TreeColumnProps = {
             id,
             label: column.columnHeader,

@@ -4,6 +4,7 @@ import { TreeviewColumnProps } from "../../../typings/MxTreeTableProps";
 const treeviewColumns: TreeviewColumnProps[] = [
     {
         columnAttr: "Title",
+        columnTitleType: "attr",
         columnClassName: "mx-first-column",
         columnHeader: "Title",
         columnWidth: "",
@@ -11,6 +12,7 @@ const treeviewColumns: TreeviewColumnProps[] = [
     },
     {
         columnAttr: "Title",
+        columnTitleType: "attr",
         columnClassName: "",
         columnHeader: "Title",
         columnWidth: "100",

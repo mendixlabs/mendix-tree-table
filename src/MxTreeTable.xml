@@ -20,7 +20,8 @@
             <propertyGroup caption="Scenario">
                 <property key="loadScenario" type="enumeration" defaultValue="partial">
                     <caption>Load</caption>
-                    <description>Decide what the widget needs to load when it has a context object</description>
+                    <description>Decide what the widget needs to load when it has a context object.
+- In case of "Whole Tree", make sure you set the "Root" attribute (see bottom) and Child reference (see Data Children)</description>
                     <enumerationValues>
                          <enumerationValue key="partial">Partial (Top-level)</enumerationValue>
                          <enumerationValue key="all">Whole Tree</enumerationValue>
@@ -30,7 +31,7 @@
             <propertyGroup caption="Source">
                 <property key="dataSource" type="enumeration" defaultValue="xpath">
                     <caption>Data Source</caption>
-                    <description>Choose how you retrieve the data. In case Scenario is set to "Partial" this only applies to top-level data. In case of "Whole Tree", make sure you set the "Root" attribute (see bottom)</description>
+                    <description>Choose how you retrieve the data. In case Scenario is set to "Partial" this only applies to top-level data.</description>
                     <enumerationValues>
                         <enumerationValue key="xpath">XPath</enumerationValue>
                         <enumerationValue key="mf">Microflow</enumerationValue>
@@ -82,7 +83,8 @@
             </property>
             <property key="childReference" type="entity" required="false" allowNonPersistableEntities="true" isPath="yes" pathType="referenceSet" entityProperty="nodeEntity">
                 <caption>Child reference</caption>
-                <description>Set method: 'Reference'. Scenario 1: Child reference entity. Choose this and it will get the data over reference, through a normal mx.data.get call. This needs a complete tree-structure</description>
+                <description>Set method: 'Reference'. Scenario 1: Child reference entity. Choose this and it will get the data over reference, through a normal mx.data.get call. This needs a complete tree-structure.
+- Note: This reference is needed whatsoever when loading a whole tree (see Data).</description>
             </property>
             <property key="childBoolean" type="attribute" entityProperty="nodeEntity" required="false" isPath="optional" pathType="reference">
                 <caption>Has child attr</caption>
@@ -157,7 +159,17 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                             <category>Column Data</category>
                             <description>Title that is above the column</description>
                         </property>
-                        <property key="columnAttr" type="attribute" entityProperty="../nodeEntity" required="true">
+                        <property key="columnTitleType" type="enumeration" defaultValue="attr">
+                            <caption>Title type</caption>
+                            <category>Column Data</category>
+                            <description>Choose between attribute or nanoflow.
+- Note: When loading the whole tree (See Data), it is strongly discouraged to use a Nanoflow, because it slows down rendering when loading a lot of objects. Use the Nanoflow very sparsely.</description>
+                            <enumerationValues>
+                                 <enumerationValue key="attr">Attribute</enumerationValue>
+                                 <enumerationValue key="nanoflow">Nanoflow</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="columnAttr" type="attribute" entityProperty="../nodeEntity" required="false">
                             <caption>Attribute</caption>
                             <category>Column Data</category>
                             <description>Attribute that holds the value</description>
@@ -174,9 +186,9 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                             </attributeTypes>
                         </property>
                         <property key="transformNanoflow" type="nanoflow" required="false" entityProperty="../nodeEntity">
-                            <caption>Transform Nanoflow</caption>
+                            <caption>Nanoflow</caption>
                             <category>Column Data</category>
-                            <description>Use this nanoflow to transform the data to a string</description>
+                            <description>Use this nanoflow to retrieve a string as the value. See note above.</description>
                             <returnType type="String" />
                         </property>
                         <!-- ****************
@@ -505,9 +517,6 @@ It should be a non-persistent entity (persistent is not permitted) with a refere
                     <caption>Type</caption>
                     <description>
 Note: State management (currently) ONLY works when you load a whole tree (see Data section). In case of 'Top level', it will be disabled.
-
-- If you use Browser, it will save the state in your browser, so you won't have to save anything on the server.
-- If you use Mendix, you will need to set up the 'Use Mendix' section at the bottom.
                     </description>
                     <enumerationValues>
                          <enumerationValue key="disabled">Disabled</enumerationValue>

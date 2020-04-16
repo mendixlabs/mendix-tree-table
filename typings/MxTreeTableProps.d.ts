@@ -24,10 +24,12 @@ export type ColumnMethod = "static" | "microflow";
 export type LoadScenario = "partial" | "all";
 export type StateManagementType = "disabled" | "localStorage" /*| "mendix"*/;
 export type StateManagementStorage = "session" | "local";
+export type ColumnTitleType = "attr" | "nanoflow";
 
 export interface TreeviewColumnProps {
     columnHeader: string;
     columnAttr: string;
+    columnTitleType: ColumnTitleType;
     transformNanoflow?: Nanoflow;
     columnWidth?: string;
     columnClassName?: string;

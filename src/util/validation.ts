@@ -24,25 +24,25 @@ export const validateProps = (
 
     conditionalValidation(
         (props.childMethod === "microflow" || props.childMethod === "nanoflow") && !props.childBoolean,
-        "Children",
+        "Data Children",
         "When using a microflow/nanoflow as Child data source, please set get child attribute"
     );
 
     conditionalValidation(
         props.childMethod === "microflow" && !props.getChildMf,
-        "Children",
+        "Data Children",
         "When using a microflow as Child data source, child microflow is required"
     );
 
     conditionalValidation(
         props.childMethod === "nanoflow" && !props.getChildNf.nanoflow,
-        "Children",
+        "Data Children",
         "When using a nanoflow as Child data source, child nanoflow is required"
     );
 
     conditionalValidation(
         props.childMethod === "reference" && !props.childReference,
-        "Children",
+        "Data Children",
         "When using a reference as Child data source, child reference attribute is required"
     );
 
@@ -73,7 +73,7 @@ export const validateProps = (
     conditionalValidation(
         props.loadScenario === "all" && !props.childReference,
         "Data",
-        "When load scenario is set to 'Whole Tree', you will need to set the childReference, otherwise it won't work"
+        "When load scenario is set to 'Whole Tree', you will need to set the Child Reference (see Data Children), otherwise it won't work"
     );
 
     conditionalValidation(props.onClickAction === "mf" && !props.onClickMf, "Events", "On click microflow missing");
@@ -104,26 +104,45 @@ export const validateProps = (
         "On double click page missing"
     );
 
-    if (props.columnMethod !== "static") {
-        conditionalValidation(
-            !props.columnHeaderEntity,
-            "Dynamic columns",
-            "When using dynamic columns, please define the column entity"
-        );
+    conditionalValidation(
+        props.columnMethod === "static" && (!props.columnList || props.columnList.length === 0),
+        "Columns (List)",
+        "Column is set to a List, but there are no columns defined"
+    );
+
+    if (props.columnMethod === "static") {
+        props.columnList.forEach(staticColumn => {
+            conditionalValidation(
+                staticColumn.columnTitleType === "attr" && !staticColumn.columnAttr,
+                "Columns (List)",
+                "Static column Title type is set to Attribute, but no attribute is defined" +
+                    (staticColumn.columnHeader !== "" ? ", caption: " + staticColumn.columnHeader : "")
+            );
+            conditionalValidation(
+                staticColumn.columnTitleType === "nanoflow" &&
+                    !(staticColumn.transformNanoflow && staticColumn.transformNanoflow.nanoflow),
+                "Columns (List)",
+                "Static column Title type is set to Nanoflow, but no nanoflow is defined" +
+                    (staticColumn.columnHeader !== "" ? ", caption: " + staticColumn.columnHeader : "")
+            );
+        });
+    } else {
+        conditionalValidation(!props.columnHeaderEntity, "Columns (Dynamic)", "Column entity is not defined");
         conditionalValidation(
             !props.columnHeaderLabelAttribute,
-            "Dynamic columns",
-            "Column label attribute is not defined!"
+            "Columns (Dynamic)",
+            "Column label attribute is not defined"
         );
         conditionalValidation(
             !props.columnHeaderAttrAttribute,
-            "Dynamic columns",
-            "Column Attribute attribute is not defined!"
+            "Columns (Dynamic)",
+            "Column Attribute attribute is not defined"
         );
-    }
-
-    if (props.columnMethod === "microflow" && !props.columnHeaderMicroflow) {
-        messages.push(new ValidationMessage("Column microflow is not defined!"));
+        conditionalValidation(
+            props.columnMethod === "microflow" && !props.columnHeaderMicroflow,
+            "Columns (Dynamic)",
+            "Column microflow is not defined"
+        );
     }
 
     if (
