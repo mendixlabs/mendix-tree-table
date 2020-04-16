@@ -541,9 +541,9 @@ export class NodeStore {
                             object.getReferences(this.rowObjectMxProperties.nodeChildReference)) ||
                         [];
                     const unfound = objRef.filter(r => this.findRowObject(r) === null);
-                    const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
+                    // const hasRows = this.rowObjects.filter(row => row._parent && row._parent === found.key).length > 0;
 
-                    if (hasRows && unfound.length > 0) {
+                    if (unfound.length > 0) {
                         // Node has children, but some references that have not been loaded yet. Load them all;
                         this.childLoader(unfound, found.key);
                     }

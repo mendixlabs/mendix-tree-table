@@ -4,7 +4,7 @@ export const createCamelcaseId = (str: string): string => {
     const camelCased = camel(str);
     const reserved = ["id", "key", "children"];
     if (reserved.indexOf(camelCased) !== -1) {
-        return `${camelCased}Id`
+        return `${camelCased}Id`;
     }
     return camelCased;
 };

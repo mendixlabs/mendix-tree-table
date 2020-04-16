@@ -230,21 +230,6 @@ export class RowObject {
     }
 
     @computed
-    get hasChildrenFromRef(): string[] {
-        const attributes = this._obj.getAttributes();
-        const { nodeChildReference } = this._mxObjectProperties;
-        return nodeChildReference !== "" && -1 < attributes.indexOf(nodeChildReference)
-            ? this._obj.getReferences(nodeChildReference)
-            : [];
-    }
-
-    @computed
-    get hasChildrenFromAttr(): boolean {
-        const { hasChildAttr } = this._mxObjectProperties;
-        return hasChildAttr ? (this._obj.get(hasChildAttr) as boolean) : false;
-    }
-
-    @computed
     get hasChildren(): boolean {
         const childRef = this.hasChildrenFromRef;
         return this.hasChildrenFromAttr || (childRef && childRef.length > 0);
@@ -290,5 +275,23 @@ export class RowObject {
         }
 
         return toJS(keyVals);
+    }
+
+    // We're not making these calculated, because they need to be reevaluated every time
+
+    get hasChildrenFromRef(): string[] {
+        const attributes = this._obj.getAttributes();
+        const { nodeChildReference } = this._mxObjectProperties;
+        return nodeChildReference !== "" && -1 < attributes.indexOf(nodeChildReference)
+            ? this._obj.getReferences(nodeChildReference)
+            : [];
+    }
+
+    get hasChildrenFromAttr(): boolean {
+        const attributes = this._obj.getAttributes();
+        const { hasChildAttr } = this._mxObjectProperties;
+        return hasChildAttr !== "" && -1 < attributes.indexOf(hasChildAttr)
+            ? (this._obj.get(hasChildAttr) as boolean)
+            : false;
     }
 }
