@@ -204,7 +204,6 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
     }
 
     componentWillUnmount(): void {
-        console.log('XXXXXXXX');
         this.store.clearSubscriptions();
     }
 
