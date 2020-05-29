@@ -526,13 +526,13 @@ export class NodeStore {
         return this.rowObjects.filter(findRow => findRow._parent && findRow._parent === row.key).length > 0;
     }
 
-    private _setSelectedFromExternal(guids: null | string | string[]): void {
+    private _setSelectedFromExternal(guids?: null | string | string[]): void {
         if (this.selectionMode === "none") {
             return;
         }
 
         let selected: RowObject[] = [];
-        if (guids === null) {
+        if (typeof guids === "undefined" || guids === null) {
             selected = [];
         } else if (Array.isArray(guids)) {
             selected = guids.map(guid => this.findRowObject(guid)).filter(obj => obj !== null) as RowObject[];

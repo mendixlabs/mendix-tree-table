@@ -777,7 +777,10 @@ Your context object is of type "${contextEntity}". Please check the configuratio
             stateExecuteSelectActionOnRestore,
             stateLocalStorageType
         } = this.props;
-        const key = stateLocalStorageKey !== "" ? `TreeTableState-${stateLocalStorageKey}${stateLocalStorageKeyIncludeGUID ? `-${guid}` : ''}` : `TreeTableState-${guid}`;
+        const key =
+            stateLocalStorageKey !== ""
+                ? `TreeTableState-${stateLocalStorageKey}${stateLocalStorageKeyIncludeGUID ? `-${guid}` : ""}`
+                : `TreeTableState-${guid}`;
         const currentDateTime = +new Date();
         const emptyState: TableState = {
             context: guid,
@@ -820,14 +823,21 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     private _writeTableState(state: TableState): void {
         // We're doing this the dirty way instead of Object.assign because IE11 sucks
         const writeState = JSON.parse(JSON.stringify(state)) as TableState;
-        const { stateManagementType, stateLocalStorageKey, stateLocalStorageKeyIncludeGUID, stateLocalStorageType } = this.props;
+        const {
+            stateManagementType,
+            stateLocalStorageKey,
+            stateLocalStorageKeyIncludeGUID,
+            stateLocalStorageType
+        } = this.props;
         if (stateManagementType === "disabled" /* || stateManagementType === "mendix"*/) {
             return;
         }
         this.debug("writeTableState", writeState);
         const key =
             stateLocalStorageKey !== ""
-                ? `TreeTableState-${stateLocalStorageKey}${stateLocalStorageKeyIncludeGUID ? `-${writeState.context}` : ''}`
+                ? `TreeTableState-${stateLocalStorageKey}${
+                      stateLocalStorageKeyIncludeGUID ? `-${writeState.context}` : ""
+                  }`
                 : `TreeTableState-${writeState.context}`;
         writeState.lastUpdate = +new Date();
         if (stateLocalStorageType === "session") {
