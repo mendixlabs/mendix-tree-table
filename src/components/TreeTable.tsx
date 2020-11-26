@@ -1,8 +1,11 @@
 import { Component, ReactNode, createElement } from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { FaExpandAlt, FaCompressAlt } from "react-icons/fa";
-import Table, { TableRowSelection, ColumnProps } from "antd/es/table";
+
+import { ExpandIcon, CompressIcon } from "./Icons";
+
+import Table, { ColumnProps } from "antd/es/table";
+import { TableRowSelection } from "antd/es/table/interface";
 
 // Importing seperate so we don't pollute the CSS too much
 import "../ui/MxTreeTable.scss";
@@ -228,13 +231,13 @@ export class TreeTable extends Component<TreeTableProps> {
         if (expanded) {
             return (
                 <div role="button" className={className} onClick={this.collapseAll}>
-                    <FaCompressAlt />
+                    <CompressIcon />
                 </div>
             );
         }
         return (
             <div role="button" className={className} onClick={this.expandAll}>
-                <FaExpandAlt />
+                <ExpandIcon />
             </div>
         );
     }
