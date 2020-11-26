@@ -146,7 +146,6 @@ export class TreeTable extends Component<TreeTableProps> {
                 },
                 onSelect: (record: TableRecord, selected: boolean, selectedRows: TableRecord[]) => {
                     const keys = selectedRows.map(row => row.key);
-                    console.log(selectMode, record, selected, selectedRows);
                     if (selectMode === "single") {
                         if (selected) {
                             this.setSelected([record.key]);
