@@ -10,8 +10,6 @@ const baseConfig = require("./node_modules/@mendix/pluggable-widgets-tools/confi
 const TerserPlugin = require("terser-webpack-plugin");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-// We're doing dirty hacking, because our camel case stuff doesn't transpile nicely to ES5. Need another solution, but this works in IE11
-baseConfig[0].module.rules[1].exclude = /node_modules\/(?!(@thi.ng)\/).*/
 baseConfig[0].module.rules[1].use.options.presets[0] = [
     '@babel/preset-env',
     {
@@ -22,7 +20,6 @@ baseConfig[0].module.rules[1].use.options.presets[0] = [
         "corejs": "2"
     }
 ]
-baseConfig[1].module.rules[1].exclude = /node_modules\/(?!(@thi.ng)\/).*/
 baseConfig[1].module.rules[1].use.options.presets[0] = [
     '@babel/preset-env',
     {

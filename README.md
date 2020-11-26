@@ -40,7 +40,7 @@ Show a tree-like structure in Mendix.
 - Dynamic columns
 - Much more...
 
-> This widget is only ~500Kb uncompressed, so in your cloud environment this would be about ~145Kb. This is light-weight for any project.
+> This widget is only ~500Kb uncompressed, so in your cloud environment this would be about ~140Kb. This is light-weight for any project.
 
 Tested:
 - IE11

@@ -96,9 +96,16 @@ export class TreeTable extends Component<TreeTableProps> {
             }
         };
 
-        const onRow = (record: TableRecord): { [name: string]: () => void } => {
+        const onRow = (record: TableRecord): { [name: string]: (event: MouseEvent) => void } => {
             return {
-                onClick: () => {
+                onClick: (event: MouseEvent) => {
+                    // When we click the checkbox, we also fire onClick. We check if it is the checkbox, if so, stop this
+                    if (event.target !== null) {
+                        const className = (event.target as HTMLElement).className;
+                        if (className.includes("ant-checkbox")) {
+                            return;
+                        }
+                    }
                     clearDebounce();
                     this.debounce = window.setTimeout(() => {
                         this.onRowClick(record);
@@ -120,7 +127,14 @@ export class TreeTable extends Component<TreeTableProps> {
                         }
                     }, DEBOUNCE);
                 },
-                onDoubleClick: () => {
+                onDoubleClick: (event: MouseEvent) => {
+                    // When we click the checkbox, we also fire onClick. We check if it is the checkbox, if so, stop this
+                    if (event.target !== null) {
+                        const className = (event.target as HTMLElement).className;
+                        if (className.includes("ant-checkbox")) {
+                            return;
+                        }
+                    }
                     clearDebounce();
                     this.debounce = window.setTimeout(() => {
                         this.onRowDblClick(record); // double click row
