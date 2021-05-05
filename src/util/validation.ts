@@ -2,7 +2,7 @@ import { MxTreeTableContainerProps } from "../../typings/MxTreeTableProps";
 import { ValidationMessage } from "@jeltemx/mendix-react-widget-utils/lib/validation";
 
 export interface ExtraMXValidateProps {
-    helperObjectPersistence?: boolean;
+    helperObjectPersistence?: boolean | null;
 }
 
 export const validateProps = (

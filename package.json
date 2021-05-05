@@ -1,7 +1,7 @@
 {
   "name": "mxtreetable",
   "widgetName": "MxTreeTable",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "TreeTable widget",
   "copyright": "Mendix 2019",
   "author": "Jelte Lagendijk <jelte.lagendijk@mendix.com>",
@@ -53,7 +53,7 @@
     "webpack-bundle-analyzer": "^3.6.0"
   },
   "dependencies": {
-    "@jeltemx/mendix-react-widget-utils": "^0.7.0",
+    "@jeltemx/mendix-react-widget-utils": "^0.9.0",
     "antd": "^4.8.5",
     "array-to-tree": "^3.3.2",
     "big.js": "^5.2.2",

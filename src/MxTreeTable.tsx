@@ -1,5 +1,4 @@
-import { Component, ReactNode, createElement } from "react";
-import { hot } from "react-hot-loader/root";
+import { Component, ReactNode, createElement, createRef } from "react";
 import { findDOMNode } from "react-dom";
 import { observer } from "mobx-react";
 import store from "store2";
@@ -17,7 +16,8 @@ import {
     createObject,
     OpenPageAs,
     entityIsPersistable,
-    executeAction
+    executeAction,
+    debug
 } from "@jeltemx/mendix-react-widget-utils";
 
 import { NodeStore, NodeStoreConstructorOptions } from "./store";
@@ -48,6 +48,8 @@ export interface TransformNanoflows {
 
 @observer
 class MxTreeTable extends Component<MxTreeTableContainerProps> {
+    ref = createRef<HTMLDivElement>();
+
     private store: NodeStore;
     private widgetId?: string;
 
@@ -150,26 +152,39 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         this.store = new NodeStore(storeOpts);
 
         // @ts-ignore
-        window._STORE = this.store;
+        // window._STORE = this.store;
     }
 
     // **********************
     // DEFAULT REACT METHODS
     // **********************
 
-    componentDidUpdate(): void {
-        if (this.widgetId) {
-            const domNode = findDOMNode(this);
-            // @ts-ignore
-            domNode.setAttribute("widgetId", this.widgetId);
-        }
-    }
+    // componentDidUpdate(): void {
+    //     // if (this.widgetId && this.ref.current) {
+    //     //     try {
+    //     //         const domNode = findDOMNode(this);
+    //     //         // @ts-ignore
+    //     //         domNode.setAttribute("widgetId", this.widgetId);
+    //     //     } catch (error) {
+    //     //         const domNode = findDOMNode(this.ref.current);
+    //     //         // @ts-ignore
+    //     //         domNode.setAttribute("widgetId", this.widgetId);
+    //     //     }
+    //     // }
+    // }
 
     componentWillReceiveProps(nextProps: MxTreeTableContainerProps): void {
-        if (!this.widgetId) {
-            const domNode = findDOMNode(this);
-            // @ts-ignore
-            this.widgetId = domNode.getAttribute("widgetId") || undefined;
+        if (!this.widgetId && this.ref.current) {
+            try {
+                const domNode = findDOMNode(this);
+                // @ts-ignore
+                this.widgetId = domNode.getAttribute("widgetId") || undefined;
+            } catch (error) {
+                const domNode = findDOMNode(this.ref.current);
+                // @ts-ignore
+                const alternativeID = domNode.getAttribute("data-mendix-id") || undefined;
+                this.widgetId = alternativeID;
+            }
         }
 
         if (nextProps.experimentalExposeSetSelected && this.store.contextObject) {
@@ -238,7 +253,7 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             );
         }
 
-        return createElement(TreeTable, {
+        const treeTableProps = {
             store: this.store,
             className: this.props.class,
             expanderFunc: this.expanderFunction,
@@ -252,7 +267,13 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
             clickToSelect: selectClickSelect,
             hideSelectBoxes: selectHideCheckboxes,
             renderExpandButton: this.props.loadScenario === "all" && this.props.uiRenderExpandButton
-        });
+        };
+
+        return (
+            <div ref={this.ref}>
+                <TreeTable {...treeTableProps} />
+            </div>
+        );
     }
 
     // **********************
@@ -620,6 +641,13 @@ class MxTreeTable extends Component<MxTreeTableContainerProps> {
         if (!helperObject) {
             return;
         }
+
+        if (helperObject.isPersistable()) {
+            this.debug(
+                "Created helper object is persistable, please see the widget. This object should NOT be persistable"
+            );
+        }
+
         const context = new window.mendix.lib.MxContext();
         context.setContext(helperObject.getEntity(), helperObject.getGuid());
 
@@ -926,11 +954,9 @@ Your context object is of type "${contextEntity}". Please check the configuratio
     }
 
     private _debug(...args: unknown[]): void {
-        const id = this.props.friendlyId || this.widgetId;
-        if (window.logger) {
-            window.logger.debug(`${id}:`, ...args);
-        }
+        const id = this.props.friendlyId || this.widgetId || "mendix.treetable.TreeTable";
+        debug(id, ...args);
     }
 }
 
-export default hot(MxTreeTable);
+export default MxTreeTable;

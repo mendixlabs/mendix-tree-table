@@ -1,7 +1,7 @@
 import { observable, action, computed, flow, toJS } from "mobx";
 import { RowObjectMxProperties } from "..";
 import { TreeColumnProps } from "../../util/columns";
-import { getFormattedValue } from "@jeltemx/mendix-react-widget-utils";
+import { debug, getFormattedValue } from "@jeltemx/mendix-react-widget-utils";
 
 export interface RowObjectOptions {
     mxObject: mendix.lib.MxObject;
@@ -103,14 +103,10 @@ export class RowObject {
             const subscription = subscribe({
                 guid: this._obj.getGuid(),
                 callback: guid => {
-                    if (window.logger) {
-                        window.logger.debug(`TreeTable subscription fired row: ${guid}`, this._keyValCorePairs);
-                    }
+                    debug("treeTable store", `TreeTable subscription fired row: ${guid}`, this._keyValCorePairs);
                     this._changeHandler(`${guid}`, removed => {
                         if (removed) {
-                            if (window.logger) {
-                                window.logger.debug(`Removed row: ${guid}`);
-                            }
+                            debug("treeTable store", `Removed row: ${guid}`);
                         } else {
                             this.fixAttributes();
                         }
